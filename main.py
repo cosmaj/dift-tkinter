@@ -1,5 +1,8 @@
 import tkinter as tk
 from tkinter import ttk
+from tkinter import filedialog
+from tkinter import messagebox
+from PIL import Image, ImageTk
 
 # -------------------------- DEFINING GLOBAL VARIABLES -------------------------
 
@@ -138,18 +141,49 @@ class TkinterApp(tk.Tk):
         frame.tkraise()
 
 
-# ------------------------ MULTIPAGE FRAMES ------------------------------------
+# ------------------------ MULTIPLE FRAMES ------------------------------------
 
 
 class Home(tk.Frame):
     def __init__(self, parent, controller):
 
         tk.Frame.__init__(self, parent)
+        
+        # Load the image
+        self.image = Image.open("images\\cover.png")
+        # self.image = self.image.resize((800, 600))  # Adjust the size as needed
+        self.image = ImageTk.PhotoImage(self.image)
 
-        label = tk.Label(
-            self, text="DIGITAL IMAGE FORENSICS TOOL (DIFT)", font=("Arial", 24)
-        )
-        label.pack()
+        # Create a canvas for the image
+        self.canvas = tk.Canvas(self)  # Adjust the size as needed
+        self.canvas.pack(fill=tk.BOTH, expand=True)
+
+        # Display the image on the canvas
+        self.canvas.create_image(0, 0, image=self.image, anchor=tk.NW)
+
+        # Create a text for the title
+        self.title_text = self.canvas.create_text(400, 400, text="CREATE NEW CASE TO START THE ANALYSIS", fill="white", font=("Arial", 20, "bold"))  # Adjust the position as needed
+        self.sub_title_text = self.canvas.create_text(400, 450, text="Discover more with AI Assistance", fill="white", font=("Arial", 14, "bold"))  # Adjust the position as needed
+        
+        # Create a button for starting the project
+        self.start_button = tk.Button(self, text="NEW CASE >", command=self.open_popup, bg=header_color, fg="white", padx=10, pady=5, borderwidth=0,relief='flat', font=('Arial', 12, 'bold'))
+        self.start_button.place(relx=0.9, rely=0.9, anchor=tk.SE)  # Adjust the position as needed
+
+    def open_popup(self):
+        popup = Popup(self)
+        
+    def resize_image(self, event=None):
+        # Get the current width and height of the window
+        width = self.winfo_width()
+        height = self.winfo_height()
+
+        # Resize the image to fit the window dimensions
+        self.image = self.image.resize((width, height))
+        self.image = ImageTk.PhotoImage(self.image)
+
+        # Update the image on the canvas
+        self.canvas.delete(self.image_on_canvas)
+        self.image_on_canvas = self.canvas.create_image(0, 0, image=self.image, anchor=tk.NW)
 
 
 class NewProject(tk.Frame):
@@ -333,5 +367,151 @@ class SidebarSubMenu(tk.Frame):
             self.options[x].place(x=30, y=45 * (n + 1), anchor="w")
 
 
+
+# ----------------------------- POPUP FORM --------------------------------------
+class Popup(tk.Toplevel):
+    def __init__(self, master):
+        super().__init__(master)
+
+        self.title("New Project")
+        
+        # Set the size of the popup window
+        # self.geometry("600x400")  # Adjust the size as needed
+
+        # Make the input fields expand to fill the available space
+        self.columnconfigure(1, weight=1)
+
+        # Create the entry fields
+        self.case_name_label = tk.Label(self, text="Case Name:")
+        self.case_name_entry = tk.Entry(self, width=100)  # Set the width of the input field
+
+        self.case_number_label = tk.Label(self, text="Case Number:")
+        self.case_number_entry = tk.Entry(self, width=100)  # Set the width of the input field
+
+        self.investigator_name_label = tk.Label(self, text="Investigator Name:")
+        self.investigator_name_entry = tk.Entry(self, width=100)  # Set the width of the input field
+
+        self.investigator_phone_label = tk.Label(self, text="Investigator Phone:")
+        self.investigator_phone_entry = tk.Entry(self, width=100)  # Set the width of the input field
+
+        self.email_label = tk.Label(self, text="Email Address:")
+        self.email_entry = tk.Entry(self, width=100)  # Set the width of the input field
+
+        self.directory_label = tk.Label(self, text="Directory:")
+        self.directory_entry = tk.Entry(self, width=100)  # Set the width of the input field
+        self.browse_button = tk.Button(self, text="Browse", command=self.browse_directory)
+
+        # Create Save and Cancel buttons
+        self.cancel_button = tk.Button(self, text="Cancel", command=self.destroy, bg="red",  padx=10, pady=5, borderwidth=0)
+        self.save_button = tk.Button(self, text="Save", command=self.save_and_close, bg="green",  padx=10, pady=5, borderwidth=0)
+
+        # Grid the entry fields with padding
+        self.case_name_label.grid(row=0, column=0, padx=(20, 0), pady=(20, 10))
+        self.case_name_entry.grid(row=0, column=1, padx=(0, 20), pady=(20, 10))
+
+        self.case_number_label.grid(row=1, column=0, padx=(20, 0), pady=(10, 10))
+        self.case_number_entry.grid(row=1, column=1, padx=(0, 20), pady=(10, 10))
+
+        self.investigator_name_label.grid(row=2, column=0, padx=(20, 0), pady=(10, 10))
+        self.investigator_name_entry.grid(row=2, column=1, padx=(0, 20), pady=(10, 10))
+
+        self.investigator_phone_label.grid(row=3, column=0, padx=(20, 0), pady=(10, 10))
+        self.investigator_phone_entry.grid(row=3, column=1, padx=(0, 20), pady=(10, 10))
+
+        self.email_label.grid(row=4, column=0, padx=(20, 0), pady=(10, 10))
+        self.email_entry.grid(row=4, column=1, padx=(0, 20), pady=(10, 10))
+
+        self.directory_label.grid(row=5, column=0, padx=(20, 0), pady=(10, 10))
+        self.directory_entry.grid(row=5, column=1, padx=(0, 20), pady=(10, 10))
+        self.browse_button.grid(row=5, column=2, padx=(0, 20), pady=(10, 10))
+
+
+        # Grid the Save and Cancel buttons at the bottom right of the form
+        self.cancel_button.grid(row=6, column=2, padx=(0, 10), pady=(10, 0), sticky="w")
+        self.save_button.grid(row=6, column=1, padx=(0, 10), pady=(10, 0), sticky="e")
+        
+        # Make the popup form window the only window that can receive events
+        self.grab_set()
+        
+        # Check if the form data dictionary exists and populate the form fields with the data
+        try:
+            if form_data:
+                self.case_name_entry.insert(0, form_data["case_name"])
+                self.case_number_entry.insert(0, form_data["case_number"])
+                self.investigator_name_entry.insert(0, form_data["investigator_name"])
+                self.investigator_phone_entry.insert(0, form_data["investigator_phone"])
+                self.email_entry.insert(0, form_data["email_address"])
+                self.directory_entry.insert(0, form_data["directory"])
+        except:
+            ...
+
+    def browse_directory(self):
+        directory = filedialog.askdirectory()
+        self.directory_entry.delete(0, tk.END)
+        self.directory_entry.insert(0, directory)
+        
+    def save_and_close(self):
+        # Validate the form fields
+        if not self.validate_form():
+            return
+        
+        # Capture the data entered in the form fields
+        case_name = self.case_name_entry.get()
+        case_number = self.case_number_entry.get()
+        investigator_name = self.investigator_name_entry.get()
+        investigator_phone = self.investigator_phone_entry.get()
+        email_address = self.email_entry.get()
+        directory = self.directory_entry.get()
+
+        # Store the data in a dictionary
+        global form_data
+        form_data = None
+        form_data = {
+            "case_name": case_name,
+            "case_number": case_number,
+            "investigator_name": investigator_name,
+            "investigator_phone": investigator_phone,
+            "email_address": email_address,
+            "directory": directory
+        }
+
+        # Print the dictionary to the console
+        print(form_data)
+
+        # Close the popup window
+        self.destroy()
+        
+    
+    def validate_form(self):
+        # Check if all the fields are filled out
+        if not self.case_name_entry.get():
+            messagebox.showwarning("Warning", "Please enter a case name.")
+            return False
+
+        if not self.case_number_entry.get():
+            messagebox.showwarning("Warning", "Please enter a case number.")
+            return False
+
+        if not self.investigator_name_entry.get():
+            messagebox.showwarning("Warning", "Please enter the investigator's name.")
+            return False
+
+        if not self.investigator_phone_entry.get():
+            messagebox.showwarning("Warning", "Please enter the investigator's phone number.")
+            return False
+
+        if not self.email_entry.get():
+            messagebox.showwarning("Warning", "Please enter an email address.")
+            return False
+
+        if not self.directory_entry.get():
+            messagebox.showwarning("Warning", "Please select a directory.")
+            return False
+
+        # If all the fields are filled out, return True
+        return True
+
+
+# --------------------------- MAIN APP -----------------------------------
 app = TkinterApp()
 app.mainloop()

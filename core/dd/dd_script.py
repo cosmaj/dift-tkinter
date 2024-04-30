@@ -49,11 +49,6 @@ def run_dd(input_disk=None, output_image=None):
         "--progress",
     ]
     progress_var.set(0)
-    # time.sleep(4)
-    # time.sleep(10)
-    # update_progress(10)
-
-    # print(f"DD command: {dd_command}")
 
     # Execute Scalpel and capture output
     process = subprocess.Popen(
@@ -76,6 +71,7 @@ def run_dd(input_disk=None, output_image=None):
             progress_str = line.strip().replace(",", "")  # Remove commas
             current_progress_value = (int(progress_str) / input_disk_size) * 100
             progress_var.set(current_progress_value)
+            root.update_idletasks()
         else:
             progress_str = line.strip().replace(",", "")  # Remove commas
             # print(f"Progress line: {line}, Type: {type(line)}")
@@ -83,7 +79,8 @@ def run_dd(input_disk=None, output_image=None):
                 value = int(progress_str)
                 current_progress_value = (value / input_disk_size) * 100
                 progress_var.set(current_progress_value)
-                print("Integer value:", value)
+                root.update_idletasks()
+                # print("Integer value:", value)
             except ValueError:
                 print("Invalid input: not a valid integer")
             # print(f"Progress str: {progress_str}, Type: {type(progress_str)}")
@@ -129,11 +126,11 @@ def run_dd(input_disk=None, output_image=None):
 
 
 def update_progress(value):
-    # Update the progress bar's value
     progress_var.set(value)
 
 
 def main():
+    global root
     root = tk.Tk()
     root.title("DD Progress")
 
@@ -143,11 +140,11 @@ def main():
     progress_bar = ttk.Progressbar(
         root, length=200, mode="determinate", orient="horizontal", variable=progress_var
     )
-    progress_bar.pack(pady=10)
+    progress_bar.pack(pady=10, padx=10, fill="x")
 
     # Disk Image Test
-    output_image = "E:\\SDCARD.dd"
-    input_disk = "F"
+    output_image = "E:\\FYP\\DISK_IMAGES\\SDCARD500MB.dd"
+    input_disk = "D"
 
     # Button to start Scalpel
     start_button = tk.Button(
