@@ -48,7 +48,7 @@ def run_dd(input_disk=None, output_image=None):
         "--size",
         "--progress",
     ]
-    progress_var.set(0)
+    disk_image_progress_var.set(0)
 
     # Execute Scalpel and capture output
     process = subprocess.Popen(
@@ -67,10 +67,10 @@ def run_dd(input_disk=None, output_image=None):
             # progress_str = line.strip().split()[-1]  # Extract the last element
             # progress_str = progress_str.replace(",", "")  # Remove commas
             # current_progress_value = (int(progress_str) / input_disk_size) * 100
-            # progress_var.set(current_progress_value)
+            # disk_image_progress_var.set(current_progress_value)
             progress_str = line.strip().replace(",", "")  # Remove commas
             current_progress_value = (int(progress_str) / input_disk_size) * 100
-            progress_var.set(current_progress_value)
+            disk_image_progress_var.set(current_progress_value)
             root.update_idletasks()
         else:
             progress_str = line.strip().replace(",", "")  # Remove commas
@@ -78,7 +78,7 @@ def run_dd(input_disk=None, output_image=None):
             try:
                 value = int(progress_str)
                 current_progress_value = (value / input_disk_size) * 100
-                progress_var.set(current_progress_value)
+                disk_image_progress_var.set(current_progress_value)
                 root.update_idletasks()
                 # print("Integer value:", value)
             except ValueError:
@@ -87,11 +87,11 @@ def run_dd(input_disk=None, output_image=None):
             # progress_int = int(progress_str)
             # print(f"Progress int: {progress_int}, Type: {type(progress_int)}")
             # current_progress_value = (progress_int / input_disk_size) * 100
-            # progress_var.set(current_progress_value)
+            # disk_image_progress_var.set(current_progress_value)
 
     print("Task completed")
     # print(f"Line: \n{line}\n")
-    progress_var.set(100)
+    disk_image_progress_var.set(100)
     # End try the following
 
     # print(f"Process: {process}")
@@ -126,7 +126,7 @@ def run_dd(input_disk=None, output_image=None):
 
 
 def update_progress(value):
-    progress_var.set(value)
+    disk_image_progress_var.set(value)
 
 
 def main():
@@ -135,10 +135,10 @@ def main():
     root.title("DD Progress")
 
     # Create a progress bar
-    global progress_var
-    progress_var = tk.DoubleVar(value=0)
+    global disk_image_progress_var
+    disk_image_progress_var = tk.DoubleVar(value=0)
     progress_bar = ttk.Progressbar(
-        root, length=200, mode="determinate", orient="horizontal", variable=progress_var
+        root, length=200, mode="determinate", orient="horizontal", variable=disk_image_progress_var
     )
     progress_bar.pack(pady=10, padx=10, fill="x")
 

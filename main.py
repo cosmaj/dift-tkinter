@@ -247,6 +247,61 @@ class ImageCarving(tk.Frame):
         # Call the method to populate the Treeview
         self.refresh_data()
 
+        # Creating disk image Progress Frame
+        disk_image_frame = tk.LabelFrame(self, text="Disk image Acquisition")
+        disk_image_frame.pack(pady=3, padx=2, fill="x")
+        
+        # Create a progress bar
+        global disk_image_progress_var
+        disk_image_progress_var = tk.DoubleVar(value=0)
+        progress_bar = ttk.Progressbar(
+            disk_image_frame, length=200, mode="determinate", orient="horizontal", variable=disk_image_progress_var
+        )
+        progress_bar.pack(pady=10, padx=10, fill="x")
+        
+        
+        # Curving Progress Frame
+        image_recovering_frame = tk.LabelFrame(self, text="Image Curving")
+        image_recovering_frame.pack(pady=5, padx=2, fill="x")
+        
+        # Create a progress bar
+        global image_curving_progress_var
+        image_curving_progress_var = tk.DoubleVar(value=0)
+        progress_bar = ttk.Progressbar(
+            image_recovering_frame, length=200, mode="determinate", orient="horizontal", variable=image_curving_progress_var
+        )
+        progress_bar.pack(pady=10, padx=10, fill="x")
+        
+        
+        
+        # Start Curving button
+         # Create Save and Cancel buttons
+        self.curve_button = tk.Button(self, text="Start Recovery", command=self.begin_curving, bg=header_color, fg="white", padx=10, pady=5, borderwidth=0,relief='flat', font=('Arial', 12, 'bold'))
+
+        # Grid the Save and Cancel buttons at the bottom right of the form
+        self.curve_button.pack(side="bottom", anchor="e", padx=10, pady=10)
+    
+    def begin_curving(self):
+        print("Recovery button clicked")
+        # Validate the form fields
+        if not self.validate_before_curving():
+            return
+        ...
+        # Other logic if all war fine
+        print("All is fine, begin curving")
+        
+    def validate_before_curving(self):
+        # Check if Case was created
+        try:
+            if form_data:
+                ...
+        except:
+            messagebox.showwarning("Warning", "Start by creating new case")
+            return False
+        
+        # If all the fields are filled out, return True
+        return True
+    
     def refresh_data(self):
         # Clear the existing tree
         for i in self.tree.get_children():
