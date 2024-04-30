@@ -3,6 +3,12 @@ from tkinter import ttk
 from tkinter import filedialog
 from tkinter import messagebox
 from PIL import Image, ImageTk
+import tempfile
+import os
+import uuid
+import platform
+import psutil
+import subprocess
 
 # -------------------------- DEFINING GLOBAL VARIABLES -------------------------
 
@@ -202,9 +208,6 @@ class ImageCarving(tk.Frame):
 
         tk.Frame.__init__(self, parent)
 
-        # label = tk.Label(self, text="Return deleted Images", font=("Arial", 15))
-        # label.pack()
-
         # Create Tree Styles
         style = ttk.Style()
         style.configure("Treeview", font=("Helvetica", 12))
@@ -282,13 +285,17 @@ class ImageCarving(tk.Frame):
         self.curve_button.pack(side="bottom", anchor="e", padx=10, pady=10)
     
     def begin_curving(self):
-        print("Recovery button clicked")
         # Validate the form fields
         if not self.validate_before_curving():
             return
-        ...
-        # Other logic if all war fine
-        print("All is fine, begin curving")
+        
+        # Get Input disk(disk letter) from the selected disk
+        input_disk = selected_disk['text']
+        
+        # Get output disk image 
+        temp_path = tempfile.gettempdir()
+        output_image = os.path.join(temp_path, f"{uuid.uuid4()}.dd")
+        self.run_dd(input_disk, output_image)
         
     def validate_before_curving(self):
         # Check if Case was created
@@ -299,6 +306,13 @@ class ImageCarving(tk.Frame):
             messagebox.showwarning("Warning", "Start by creating new case")
             return False
         
+        # verify the disk is selected
+        try:
+            if selected_disk:
+                ...
+        except:
+            messagebox.showwarning("Warning", "Select disk to recover from")
+            return False
         # If all the fields are filled out, return True
         return True
     
@@ -361,13 +375,128 @@ class ImageCarving(tk.Frame):
         self.tree.pack(fill=tk.X, expand=0)
 
     def on_disk_select(self, event):
-        # Get selected item
+        # Get selected item(Disk)
+        global selected_disk
         selected_disk = None
         try:
             selected_disk = self.tree.selection()[0]
-            print("Selected item:", self.tree.item(selected_disk))
+            selected_disk = self.tree.item(selected_disk)
         except Exception as e:
             print(f"Some errors: {e}")
+
+    # Take disk Image
+    def run_dd(self, input_disk=None, output_image=None):
+        # Get the path to the current script's directory
+        current_dir = os.path.dirname(os.path.abspath(__name__))
+        dd = os.path.join(current_dir, "core", "dd", "dd.exe")
+        
+        # Get current OS
+        current_os = platform.system().lower()
+        disk_mount_point = input_disk
+
+        if current_os == "windows":
+            disk_mount_point = input_disk + ":/"
+            # """
+            # Get current Disk name i.e E
+            # for windows the disk name should be modified to \\.\e:
+            # """
+            input_disk = input_disk.lower()
+            pre_d = "\\\\.\\"
+            input_disk = pre_d + input_disk + ":"
+            del pre_d
+
+        # scalpel_command = ["scalpel", "-i", "input_image.dd", "-o", "output_directory"]
+
+        input_disk_size = psutil.disk_usage(disk_mount_point).total
+
+        dd_command = [
+            dd,
+            f"if={input_disk}",
+            f"of={output_image}",
+            "bs=1M",
+            "--size",
+            "--progress",
+        ]
+        self.update_disk_copying_progress(0)
+        app.update_idletasks()
+
+        # Execute Scalpel and capture output
+        process = subprocess.Popen(
+            dd_command,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+            universal_newlines=True,
+        )
+
+        # Try the following
+        current_progress_value = 3
+        for line in process.stdout:
+            current_progress_value = current_progress_value + 1
+            if "--progress" in line:
+                # progress_str = line.strip().split()[-1]  # Extract the last element
+                # progress_str = progress_str.replace(",", "")  # Remove commas
+                # current_progress_value = (int(progress_str) / input_disk_size) * 100
+                # disk_image_progress_var.set(current_progress_value)
+                progress_str = line.strip().replace(",", "")  # Remove commas
+                current_progress_value = (int(progress_str) / input_disk_size) * 100
+                # disk_image_progress_var.set(current_progress_value)
+                self.update_disk_copying_progress(current_progress_value)
+                app.update_idletasks()
+            else:
+                progress_str = line.strip().replace(",", "")  # Remove commas
+                try:
+                    value = int(progress_str)
+                    current_progress_value = (value / input_disk_size) * 100
+                    self.update_disk_copying_progress(current_progress_value)
+                    app.update_idletasks()
+                    # print("Integer value:", value)
+                except ValueError:
+                    print("Invalid input: not a valid integer")
+                # print(f"Progress str: {progress_str}, Type: {type(progress_str)}")
+                # progress_int = int(progress_str)
+                # print(f"Progress int: {progress_int}, Type: {type(progress_int)}")
+                # current_progress_value = (progress_int / input_disk_size) * 100
+                # disk_image_progress_var.set(current_progress_value)
+
+        print("Disk Acquisition Task was completed successfully!")
+        # print(f"Line: \n{line}\n")
+        self.update_disk_copying_progress(100)
+        # End try the following
+
+        # print(f"Process: {process}")
+        # print(f"\nBefore going through while loop\n")
+        # update_progress(19)
+        # progress_value = 25
+        # while True:
+        #     # progress_value = progress_value + 1
+        #     # update_progress(progress_value)
+        #     # print(f"\nIn while loop\n")
+        #     # print(f"\nProgress {process}\n")
+        #     line = process.stdout.readline().decode("utf-8")
+        #     # update_progress(100)
+        #     # print(f"Line: {line}")
+        #     if not line:
+        #         update_progress(100)
+        #         break
+        #     else:
+        #         print(int(line), type(line))
+        #         break
+        #     # Example: Extract progress percentage from the line
+        #     current_progress_value = (int(line) / input_disk_size) * 100
+        #     print(f"Current value: {current_progress_value}")
+        #     # break
+        #     return
+        # match = re.search(r"(\d+)% complete", line)
+        # if match:
+        #     print("\nMatch found")
+        #     progress_percentage = int(match.group(1))
+        #     # Update the progress bar here with progress_percentage
+        #     update_progress(progress_percentage)
+
+
+    def update_disk_copying_progress(self,value):
+        disk_image_progress_var.set(value)
+
 
 
 class ImageAutheticity(tk.Frame):
@@ -451,8 +580,9 @@ class Popup(tk.Toplevel):
 
         self.email_label = tk.Label(self, text="Email Address:")
         self.email_entry = tk.Entry(self, width=100)  # Set the width of the input field
+        
 
-        self.directory_label = tk.Label(self, text="Directory:")
+        self.directory_label = tk.Label(self, text="Folder to store results:")
         self.directory_entry = tk.Entry(self, width=100)  # Set the width of the input field
         self.browse_button = tk.Button(self, text="Browse", command=self.browse_directory)
 
@@ -475,6 +605,7 @@ class Popup(tk.Toplevel):
 
         self.email_label.grid(row=4, column=0, padx=(20, 0), pady=(10, 10))
         self.email_entry.grid(row=4, column=1, padx=(0, 20), pady=(10, 10))
+        
 
         self.directory_label.grid(row=5, column=0, padx=(20, 0), pady=(10, 10))
         self.directory_entry.grid(row=5, column=1, padx=(0, 20), pady=(10, 10))
@@ -531,7 +662,7 @@ class Popup(tk.Toplevel):
         }
 
         # Print the dictionary to the console
-        print(form_data)
+        # print(form_data)
 
         # Close the popup window
         self.destroy()
@@ -568,5 +699,6 @@ class Popup(tk.Toplevel):
 
 
 # --------------------------- MAIN APP -----------------------------------
+global app
 app = TkinterApp()
 app.mainloop()
