@@ -47,14 +47,28 @@ def update_progress_bar(progress_bar, progress_var, process):
         line = process.stdout.readline()
         print(f"Line: {line}")
 
-        if line.strip().endswith("MB"):
-            processed_mb = float(line.strip()[:-3])
-            processed_bytes = int(processed_mb * 1024 * 1024)
-            accumulated_bytes += processed_bytes
-            if pass_started:
-                progress_var.set(int((accumulated_bytes / file_size) * max_value))
+        if line.strip().endswith("ETA"):
+            # print(f"It ends with ETA")
+            data_array = line.split()
+            percentage_str = data_array[1][:-1]
+            # size_processed = data_array[2]
+            # unit_processed = data_array[3]
+
+            try:
+                # print(f"Data type: {type(percentage_str)}, Value: {percentage_str}")
+                progress_var.set(float(percentage_str))
                 root.update_idletasks()
-                # print(f"4: Progress updated to {progress_var.get()}")
+            except Exception as err:
+                print("Issue while processing percentage string")
+                print(err)
+
+            # processed_mb = float(line.strip()[:-3])
+            # processed_bytes = int(processed_mb * 1024 * 1024)
+            # accumulated_bytes += processed_bytes
+            # if pass_started:
+            #     progress_var.set(int((accumulated_bytes / file_size) * max_value))
+            #     root.update_idletasks()
+            #     print(f"4: Progress updated to {progress_var.get()}")
 
         # Check for the current pass and total passes
         pass_match = re.search(r"Image file pass (\d+)/(\d+)\.", line)
@@ -100,6 +114,7 @@ def start_carving():
     progress_thread.start()
 
 
+global root
 root = tk.Tk()
 root.title("Scalpel GUI")
 
@@ -109,8 +124,9 @@ frame.pack(pady=10)
 button = tk.Button(frame, text="Start carving", command=start_carving)
 button.pack(side=tk.LEFT, padx=(0, 10))
 
+global progress_var
 progress_var = tk.DoubleVar()
-progress_bar = tkinter.ttk.Progressbar(frame, variable=progress_var)
+progress_bar = tkinter.ttk.Progressbar(frame, variable=progress_var, length=200)
 progress_bar.pack(side=tk.LEFT, fill=tk.X, expand=True)
 
 root.mainloop()
