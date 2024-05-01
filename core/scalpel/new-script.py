@@ -32,9 +32,8 @@ def update_progress_bar(progress_bar, progress_var, process):
     # print("1: Progress bar configured")
 
     file_size = 0
-    with open(input_file, "rb") as f:
-        file_size = len(f.read())
-    # print("2: File size determined")
+    file_size = os.path.getsize(input_file)
+    print("2: File size determined")
 
     processed_bytes = 0
     current_pass = 0
