@@ -1,10 +1,6 @@
-import re
 import tkinter as tk
 from tkinter import ttk
 from tkinter import filedialog
-
-# import ttkbootstrap as tb
-# from ttkbootstrap.toast import ToastNotification
 from tkinter import messagebox
 from PIL import Image, ImageTk
 import tempfile
@@ -13,9 +9,6 @@ import uuid
 import platform
 import psutil
 import subprocess
-import threading
-import phonenumbers
-import time
 
 # -------------------------- DEFINING GLOBAL VARIABLES -------------------------
 
@@ -43,10 +36,10 @@ class TkinterApp(tk.Tk):
         # ------------- BASIC APP LAYOUT -----------------
 
         self.geometry("1100x700")
-        self.resizable()
+        self.resizable(0, 0)
         self.title("Digital Image Forensic Tool")
         self.config(background=selectionbar_color)
-        icon = tk.PhotoImage(file="images\\dift-logo.png")
+        icon = tk.PhotoImage(file="images\\logo.png")
         self.iconphoto(True, icon)
 
         # ---------------- HEADER ------------------------
@@ -66,18 +59,18 @@ class TkinterApp(tk.Tk):
         logo = tk.Label(self.brand_frame, image=self.uni_logo, bg=sidebar_color)
         logo.place(x=5, y=20)
 
-        # uni_name = tk.Label(
-        #     self.brand_frame, text="", bg=sidebar_color, font=("", 15, "bold")
-        # )
-        # uni_name.place(x=55, y=27, anchor="w")
+        uni_name = tk.Label(
+            self.brand_frame, text="DIFT", bg=sidebar_color, font=("", 15, "bold")
+        )
+        uni_name.place(x=55, y=27, anchor="w")
 
-        # uni_name = tk.Label(
-        #     self.brand_frame,
-        #     # text="Digital Image Forensic Tool",
-        #     bg=sidebar_color,
-        #     font=("", 15, "bold"),
-        # )
-        # uni_name.place(x=55, y=60, anchor="w")
+        uni_name = tk.Label(
+            self.brand_frame,
+            text="Digital Image Forensic Tool",
+            bg=sidebar_color,
+            font=("", 15, "bold"),
+        )
+        uni_name.place(x=55, y=60, anchor="w")
 
         # SUBMENUS IN SIDE BAR
 
@@ -86,16 +79,14 @@ class TkinterApp(tk.Tk):
         self.submenu_frame.place(relx=0, rely=0.2, relwidth=1, relheight=0.85)
         submenu1 = SidebarSubMenu(
             self.submenu_frame,
-            sub_menu_heading="SUBMENU",
+            sub_menu_heading="SUBMENU 1",
             sub_menu_options=[
-                "Register Case",
+                "Home",
                 "Image Carving",
                 "Image Authenticity",
             ],
         )
-        submenu1.options["Register Case"].config(
-            command=lambda: self.show_frame(Home, "Register Case")
-        )
+        submenu1.options["Home"].config(command=lambda: self.show_frame(Home, "Home"))
         submenu1.options["Image Carving"].config(
             command=lambda: self.show_frame(
                 ImageCarving, "Mount Disk to begin recovery"
@@ -117,6 +108,7 @@ class TkinterApp(tk.Tk):
 
         for F in (
             Home,
+            NewProject,
             ImageCarving,
             ImageAutheticity,
         ):
@@ -124,7 +116,7 @@ class TkinterApp(tk.Tk):
             frame = F(container, self)
             self.frames[F] = frame
             frame.place(relx=0, rely=0, relwidth=1, relheight=1)
-        self.show_frame(Home, "Register Case")
+        self.show_frame(Home, "Home")
 
     def show_frame(self, cont, title):
         """
@@ -162,7 +154,7 @@ class Home(tk.Frame):
     def __init__(self, parent, controller):
 
         tk.Frame.__init__(self, parent)
-
+        
         # Load the image
         self.image = Image.open("images\\cover.png")
         # self.image = self.image.resize((800, 600))  # Adjust the size as needed
@@ -176,41 +168,16 @@ class Home(tk.Frame):
         self.canvas.create_image(0, 0, image=self.image, anchor=tk.NW)
 
         # Create a text for the title
-        self.title_text = self.canvas.create_text(
-            400,
-            400,
-            text="CREATE NEW CASE TO START THE ANALYSIS",
-            fill="white",
-            font=("Arial", 20, "bold"),
-        )  # Adjust the position as needed
-        self.sub_title_text = self.canvas.create_text(
-            400,
-            450,
-            text="Discover more with AI Assistance",
-            fill="white",
-            font=("Arial", 14, "bold"),
-        )  # Adjust the position as needed
-
+        self.title_text = self.canvas.create_text(400, 400, text="CREATE NEW CASE TO START THE ANALYSIS", fill="white", font=("Arial", 20, "bold"))  # Adjust the position as needed
+        self.sub_title_text = self.canvas.create_text(400, 450, text="Discover more with AI Assistance", fill="white", font=("Arial", 14, "bold"))  # Adjust the position as needed
+        
         # Create a button for starting the project
-        self.start_button = tk.Button(
-            self,
-            text="NEW CASE >",
-            command=self.open_popup,
-            bg=header_color,
-            fg="white",
-            padx=10,
-            pady=5,
-            borderwidth=0,
-            relief="flat",
-            font=("Arial", 12, "bold"),
-        )
-        self.start_button.place(
-            relx=0.9, rely=0.9, anchor=tk.SE
-        )  # Adjust the position as needed
+        self.start_button = tk.Button(self, text="NEW CASE >", command=self.open_popup, bg=header_color, fg="white", padx=10, pady=5, borderwidth=0,relief='flat', font=('Arial', 12, 'bold'))
+        self.start_button.place(relx=0.9, rely=0.9, anchor=tk.SE)  # Adjust the position as needed
 
     def open_popup(self):
         popup = Popup(self)
-
+        
     def resize_image(self, event=None):
         # Get the current width and height of the window
         width = self.winfo_width()
@@ -222,9 +189,16 @@ class Home(tk.Frame):
 
         # Update the image on the canvas
         self.canvas.delete(self.image_on_canvas)
-        self.image_on_canvas = self.canvas.create_image(
-            0, 0, image=self.image, anchor=tk.NW
-        )
+        self.image_on_canvas = self.canvas.create_image(0, 0, image=self.image, anchor=tk.NW)
+
+
+class NewProject(tk.Frame):
+    def __init__(self, parent, controller):
+
+        tk.Frame.__init__(self, parent)
+
+        label = tk.Label(self, text="Project Info goes here", font=("Arial", 24))
+        label.pack()
 
 
 class ImageCarving(tk.Frame):
@@ -279,70 +253,50 @@ class ImageCarving(tk.Frame):
         # Creating disk image Progress Frame
         disk_image_frame = tk.LabelFrame(self, text="Disk image Acquisition")
         disk_image_frame.pack(pady=3, padx=2, fill="x")
-
+        
         # Create a progress bar
         global disk_image_progress_var
         disk_image_progress_var = tk.DoubleVar(value=0)
         progress_bar = ttk.Progressbar(
-            disk_image_frame,
-            length=200,
-            mode="determinate",
-            orient="horizontal",
-            variable=disk_image_progress_var,
+            disk_image_frame, length=200, mode="determinate", orient="horizontal", variable=disk_image_progress_var
         )
         progress_bar.pack(pady=10, padx=10, fill="x")
-
+        
+        
         # Curving Progress Frame
         image_recovering_frame = tk.LabelFrame(self, text="Image Curving")
         image_recovering_frame.pack(pady=5, padx=2, fill="x")
-
+        
         # Create a progress bar
         global image_curving_progress_var
         image_curving_progress_var = tk.DoubleVar(value=0)
-        global curving_progress_bar
-        curving_progress_bar = ttk.Progressbar(
-            image_recovering_frame,
-            length=200,
-            mode="determinate",
-            orient="horizontal",
-            variable=image_curving_progress_var,
+        progress_bar = ttk.Progressbar(
+            image_recovering_frame, length=200, mode="determinate", orient="horizontal", variable=image_curving_progress_var
         )
-        curving_progress_bar.pack(pady=10, padx=10, fill="x")
-
+        progress_bar.pack(pady=10, padx=10, fill="x")
+        
+        
+        
         # Start Curving button
-        # Create Save and Cancel buttons
-        self.curve_button = tk.Button(
-            self,
-            text="Start Recovery",
-            command=self.begin_curving,
-            bg=header_color,
-            fg="white",
-            padx=10,
-            pady=5,
-            borderwidth=0,
-            relief="flat",
-            font=("Arial", 12, "bold"),
-        )
+         # Create Save and Cancel buttons
+        self.curve_button = tk.Button(self, text="Start Recovery", command=self.begin_curving, bg=header_color, fg="white", padx=10, pady=5, borderwidth=0,relief='flat', font=('Arial', 12, 'bold'))
 
         # Grid the Save and Cancel buttons at the bottom right of the form
         self.curve_button.pack(side="bottom", anchor="e", padx=10, pady=10)
-
+    
     def begin_curving(self):
         # Validate the form fields
         if not self.validate_before_curving():
             return
-
+        
         # Get Input disk(disk letter) from the selected disk
-        input_disk = selected_disk["text"]
-
-        # Get output disk image
+        input_disk = selected_disk['text']
+        
+        # Get output disk image 
         temp_path = tempfile.gettempdir()
         output_image = os.path.join(temp_path, f"{uuid.uuid4()}.dd")
         self.run_dd(input_disk, output_image)
-
-        # call Execute scalpel
-        self.start_carving(output_image, form_data["directory"])
-
+        
     def validate_before_curving(self):
         # Check if Case was created
         try:
@@ -351,7 +305,7 @@ class ImageCarving(tk.Frame):
         except:
             messagebox.showwarning("Warning", "Start by creating new case")
             return False
-
+        
         # verify the disk is selected
         try:
             if selected_disk:
@@ -361,7 +315,7 @@ class ImageCarving(tk.Frame):
             return False
         # If all the fields are filled out, return True
         return True
-
+    
     def refresh_data(self):
         # Clear the existing tree
         for i in self.tree.get_children():
@@ -435,7 +389,7 @@ class ImageCarving(tk.Frame):
         # Get the path to the current script's directory
         current_dir = os.path.dirname(os.path.abspath(__name__))
         dd = os.path.join(current_dir, "core", "dd", "dd.exe")
-
+        
         # Get current OS
         current_os = platform.system().lower()
         disk_mount_point = input_disk
@@ -539,129 +493,10 @@ class ImageCarving(tk.Frame):
         #     # Update the progress bar here with progress_percentage
         #     update_progress(progress_percentage)
 
-    def update_disk_copying_progress(self, value):
+
+    def update_disk_copying_progress(self,value):
         disk_image_progress_var.set(value)
 
-    # Recovering/Curving process by Scalpel
-    def execute_scalpel(self, input_file, output_folder):
-        current_directory = os.path.dirname(os.path.realpath(__file__))
-        command = [
-            os.path.join(current_directory, "core", "scalpel", "scalpel.exe"),
-            "-c",
-            os.path.join(current_directory, "core", "scalpel", "scalpel.conf"),
-            input_file,
-            "-o",
-            output_folder,
-        ]
-        process = subprocess.Popen(
-            command,
-            stdout=subprocess.PIPE,
-            stderr=subprocess.PIPE,
-            universal_newlines=True,
-        )
-        return process
-
-    def update_progress_bar(
-        self, input_file, curving_progress_bar, image_curving_progress_var, process
-    ):
-        image_curving_progress_var.set(0)
-        max_value = 100
-        curving_progress_bar.config(maximum=max_value)
-        app.update_idletasks()
-        # print("1: Progress bar configured")
-
-        file_size = 0
-        file_size = os.path.getsize(input_file)
-        # print("2: File size determined")
-
-        processed_bytes = 0
-        current_pass = 0
-        total_passes = 0
-        pass_started = False
-        accumulated_bytes = 0
-        carving_finished = False
-
-        while not carving_finished:
-            # print("3: Inside while loop")
-            line = process.stdout.readline()
-            # print(f"Line: {line}")
-
-            if line.strip().endswith("ETA"):
-                # print(f"It ends with ETA")
-                data_array = line.split()
-                percentage_str = data_array[1][:-1]
-                # size_processed = data_array[2]
-                # unit_processed = data_array[3]
-
-                try:
-                    # print(f"Data type: {type(percentage_str)}, Value: {percentage_str}")
-                    image_curving_progress_var.set(float(percentage_str))
-                    app.update_idletasks()
-                except Exception as err:
-                    print("Issue while processing percentage string")
-                    print(err)
-
-                # processed_mb = float(line.strip()[:-3])
-                # processed_bytes = int(processed_mb * 1024 * 1024)
-                # accumulated_bytes += processed_bytes
-                # if pass_started:
-                #     image_curving_progress_var.set(int((accumulated_bytes / file_size) * max_value))
-                #     root.update_idletasks()
-                #     print(f"4: Progress updated to {image_curving_progress_var.get()}")
-
-            # Check for the current pass and total passes
-            pass_match = re.search(r"Image file pass (\d+)/(\d+)\.", line)
-            if pass_match:
-                current_pass = int(pass_match.group(1))
-                total_passes = int(pass_match.group(2))
-                pass_started = True
-                print(
-                    f"5: Pass info updated. Current pass: {current_pass}, Total passes: {total_passes}"
-                )
-                accumulated_bytes = 0  # Reset accumulated_bytes for each pass
-
-            # Check if carving is finished
-            if (
-                current_pass == total_passes
-                and line.strip() == f"Image file pass {current_pass}/{total_passes}."
-            ):
-                carving_finished = True
-
-            time.sleep(0.1)
-            # Break out of loop if no data in line
-            if not line:
-                break
-
-        # Update the progress bar to 100% when all passes are completed
-        if current_pass == total_passes:
-            image_curving_progress_var.set(max_value)
-            app.update_idletasks()
-            # print("6: Progress updated to 100%")
-            print("Carving process has finished.")
-
-        # Remove the temp input file
-        if os.path.exists(input_file):
-            try:
-                os.remove(input_file)
-            except Exception as err:
-                print(f"Failed to remove the input file: {input_file}")
-                print(f"Error: {err}")
-        print("7: Exiting update_progress_bar function")
-
-    def start_carving(self, input_file, output_folder):
-
-        process = self.execute_scalpel(input_file, output_folder)
-
-        progress_thread = threading.Thread(
-            target=self.update_progress_bar,
-            args=(
-                input_file,
-                curving_progress_bar,
-                image_curving_progress_var,
-                process,
-            ),
-        )
-        progress_thread.start()
 
 
 class ImageAutheticity(tk.Frame):
@@ -716,13 +551,14 @@ class SidebarSubMenu(tk.Frame):
             self.options[x].place(x=30, y=45 * (n + 1), anchor="w")
 
 
+
 # ----------------------------- POPUP FORM --------------------------------------
 class Popup(tk.Toplevel):
     def __init__(self, master):
         super().__init__(master)
 
         self.title("New Project")
-
+        
         # Set the size of the popup window
         # self.geometry("600x400")  # Adjust the size as needed
 
@@ -731,55 +567,28 @@ class Popup(tk.Toplevel):
 
         # Create the entry fields
         self.case_name_label = tk.Label(self, text="Case Name:")
-        self.case_name_entry = tk.Entry(
-            self, width=100
-        )  # Set the width of the input field
+        self.case_name_entry = tk.Entry(self, width=100)  # Set the width of the input field
 
         self.case_number_label = tk.Label(self, text="Case Number:")
-        self.case_number_entry = tk.Entry(
-            self, width=100
-        )  # Set the width of the input field
+        self.case_number_entry = tk.Entry(self, width=100)  # Set the width of the input field
 
         self.investigator_name_label = tk.Label(self, text="Investigator Name:")
-        self.investigator_name_entry = tk.Entry(
-            self, width=100
-        )  # Set the width of the input field
+        self.investigator_name_entry = tk.Entry(self, width=100)  # Set the width of the input field
 
         self.investigator_phone_label = tk.Label(self, text="Investigator Phone:")
-        self.investigator_phone_entry = tk.Entry(
-            self, width=100
-        )  # Set the width of the input field
+        self.investigator_phone_entry = tk.Entry(self, width=100)  # Set the width of the input field
 
         self.email_label = tk.Label(self, text="Email Address:")
         self.email_entry = tk.Entry(self, width=100)  # Set the width of the input field
+        
 
         self.directory_label = tk.Label(self, text="Folder to store results:")
-        self.directory_entry = tk.Entry(
-            self, width=100
-        )  # Set the width of the input field
-        self.browse_button = tk.Button(
-            self, text="Browse", command=self.browse_directory
-        )
+        self.directory_entry = tk.Entry(self, width=100)  # Set the width of the input field
+        self.browse_button = tk.Button(self, text="Browse", command=self.browse_directory)
 
         # Create Save and Cancel buttons
-        self.cancel_button = tk.Button(
-            self,
-            text="Cancel",
-            command=self.destroy,
-            bg="red",
-            padx=10,
-            pady=5,
-            borderwidth=0,
-        )
-        self.save_button = tk.Button(
-            self,
-            text="Save",
-            command=self.save_and_close,
-            bg="green",
-            padx=10,
-            pady=5,
-            borderwidth=0,
-        )
+        self.cancel_button = tk.Button(self, text="Cancel", command=self.destroy, bg="red",  padx=10, pady=5, borderwidth=0)
+        self.save_button = tk.Button(self, text="Save", command=self.save_and_close, bg="green",  padx=10, pady=5, borderwidth=0)
 
         # Grid the entry fields with padding
         self.case_name_label.grid(row=0, column=0, padx=(20, 0), pady=(20, 10))
@@ -796,18 +605,20 @@ class Popup(tk.Toplevel):
 
         self.email_label.grid(row=4, column=0, padx=(20, 0), pady=(10, 10))
         self.email_entry.grid(row=4, column=1, padx=(0, 20), pady=(10, 10))
+        
 
         self.directory_label.grid(row=5, column=0, padx=(20, 0), pady=(10, 10))
         self.directory_entry.grid(row=5, column=1, padx=(0, 20), pady=(10, 10))
         self.browse_button.grid(row=5, column=2, padx=(0, 20), pady=(10, 10))
 
+
         # Grid the Save and Cancel buttons at the bottom right of the form
         self.cancel_button.grid(row=6, column=2, padx=(0, 10), pady=(10, 0), sticky="w")
         self.save_button.grid(row=6, column=1, padx=(0, 10), pady=(10, 0), sticky="e")
-
+        
         # Make the popup form window the only window that can receive events
         self.grab_set()
-
+        
         # Check if the form data dictionary exists and populate the form fields with the data
         try:
             if form_data:
@@ -824,12 +635,12 @@ class Popup(tk.Toplevel):
         directory = filedialog.askdirectory()
         self.directory_entry.delete(0, tk.END)
         self.directory_entry.insert(0, directory)
-
+        
     def save_and_close(self):
         # Validate the form fields
         if not self.validate_form():
             return
-
+        
         # Capture the data entered in the form fields
         case_name = self.case_name_entry.get()
         case_number = self.case_number_entry.get()
@@ -847,7 +658,7 @@ class Popup(tk.Toplevel):
             "investigator_name": investigator_name,
             "investigator_phone": investigator_phone,
             "email_address": email_address,
-            "directory": directory,
+            "directory": directory
         }
 
         # Print the dictionary to the console
@@ -855,7 +666,8 @@ class Popup(tk.Toplevel):
 
         # Close the popup window
         self.destroy()
-
+        
+    
     def validate_form(self):
         # Check if all the fields are filled out
         if not self.case_name_entry.get():
@@ -870,32 +682,12 @@ class Popup(tk.Toplevel):
             messagebox.showwarning("Warning", "Please enter the investigator's name.")
             return False
 
-        if not all(
-            c.isalpha() or c.isspace()
-            for c in self.investigator_name_entry.get().strip()
-        ):
-            messagebox.showwarning(
-                "Warning",
-                "Investigator's name should contain letters and whitespaces only.",
-            )
-            return False
-
         if not self.investigator_phone_entry.get():
-            messagebox.showwarning(
-                "Warning", "Please enter the investigator's phone number."
-            )
-            return False
-
-        if not self.check_phone_number(self.investigator_phone_entry.get().strip()):
-            messagebox.showwarning("Warning", "Investigator's phone number is invalid.")
+            messagebox.showwarning("Warning", "Please enter the investigator's phone number.")
             return False
 
         if not self.email_entry.get():
             messagebox.showwarning("Warning", "Please enter an email address.")
-            return False
-
-        if not self.check_email(self.email_entry.get()):
-            messagebox.showwarning("Warning", "Please enter a valid email address.")
             return False
 
         if not self.directory_entry.get():
@@ -904,18 +696,6 @@ class Popup(tk.Toplevel):
 
         # If all the fields are filled out, return True
         return True
-
-    def check_email(self, email):
-        # Valid TDL can be A-Za-z length from 2 to 7
-        regex = r"\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Z|a-z]{2,7}\b"
-        return re.fullmatch(regex, email)
-
-    def check_phone_number(self, phone_number):
-        try:
-            parsed_number = phonenumbers.parse(phone_number, "TZ")
-            return phonenumbers.is_valid_number(parsed_number)
-        except phonenumbers.phonenumberutil.NumberParseException:
-            return False
 
 
 # --------------------------- MAIN APP -----------------------------------

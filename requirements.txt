@@ -1,2 +1,4 @@
 psutil==5.9.8
 tk==0.1.0
+phonenumbers
+pillow

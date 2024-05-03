@@ -5,3 +5,11 @@ prg_str = data_array[1][:-1]
 size_processed = data_array[2]
 unit_processed = data_array[3]
 print(f"Percentage: {prg_str}, Size: {size_processed}, {unit_processed}")
+
+
+# Summary info
+jpg_data = (
+    'jpg with header "\xff\xd8\xff\xe0\x00\x10" and footer "\xff\xd9" --> 290 files'
+)
+
+png_data = 'png with header "\x89\x50\x4e\x47\x0d\x0a\x1a\x0a" and footer "\x00\x00\x00\x00\x49\x45\x4e\x44\xae\x42\x60\x82" --> 3425 files'

@@ -24,10 +24,10 @@ def execute_scalpel(input_file, output_folder):
     return process
 
 
-def update_progress_bar(curving_progress_bar, image_curving_progress_var, process):
-    image_curving_progress_var.set(0)
+def update_progress_bar(progress_bar, progress_var, process):
+    progress_var.set(0)
     max_value = 100
-    curving_progress_bar.config(maximum=max_value)
+    progress_bar.config(maximum=max_value)
     root.update_idletasks()
     # print("1: Progress bar configured")
 
@@ -56,7 +56,7 @@ def update_progress_bar(curving_progress_bar, image_curving_progress_var, proces
 
             try:
                 # print(f"Data type: {type(percentage_str)}, Value: {percentage_str}")
-                image_curving_progress_var.set(float(percentage_str))
+                progress_var.set(float(percentage_str))
                 root.update_idletasks()
             except Exception as err:
                 print("Issue while processing percentage string")
@@ -66,9 +66,9 @@ def update_progress_bar(curving_progress_bar, image_curving_progress_var, proces
             # processed_bytes = int(processed_mb * 1024 * 1024)
             # accumulated_bytes += processed_bytes
             # if pass_started:
-            #     image_curving_progress_var.set(int((accumulated_bytes / file_size) * max_value))
+            #     progress_var.set(int((accumulated_bytes / file_size) * max_value))
             #     root.update_idletasks()
-            #     print(f"4: Progress updated to {image_curving_progress_var.get()}")
+            #     print(f"4: Progress updated to {progress_var.get()}")
 
         # Check for the current pass and total passes
         pass_match = re.search(r"Image file pass (\d+)/(\d+)\.", line)
@@ -95,7 +95,7 @@ def update_progress_bar(curving_progress_bar, image_curving_progress_var, proces
 
     # Update the progress bar to 100% when all passes are completed
     if current_pass == total_passes:
-        image_curving_progress_var.set(max_value)
+        progress_var.set(max_value)
         root.update_idletasks()
         # print("6: Progress updated to 100%")
         print("Carving process has finished.")
@@ -112,8 +112,7 @@ def start_carving():
     process = execute_scalpel(input_file, output_folder)
 
     progress_thread = threading.Thread(
-        target=update_progress_bar,
-        args=(curving_progress_bar, image_curving_progress_var, process),
+        target=update_progress_bar, args=(progress_bar, progress_var, process)
     )
     progress_thread.start()
 
@@ -128,11 +127,9 @@ frame.pack(pady=10)
 button = tk.Button(frame, text="Start carving", command=start_carving)
 button.pack(side=tk.LEFT, padx=(0, 10))
 
-global image_curving_progress_var
-image_curving_progress_var = tk.DoubleVar()
-curving_progress_bar = tkinter.ttk.Progressbar(
-    frame, variable=image_curving_progress_var, length=200
-)
-curving_progress_bar.pack(side=tk.LEFT, fill=tk.X, expand=True)
+global progress_var
+progress_var = tk.DoubleVar()
+progress_bar = tkinter.ttk.Progressbar(frame, variable=progress_var, length=200)
+progress_bar.pack(side=tk.LEFT, fill=tk.X, expand=True)
 
 root.mainloop()
