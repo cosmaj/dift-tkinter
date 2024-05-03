@@ -16,6 +16,7 @@ import subprocess
 import threading
 import phonenumbers
 import time
+from winotify import Notification, audio
 
 # -------------------------- DEFINING GLOBAL VARIABLES -------------------------
 
@@ -638,6 +639,7 @@ class ImageCarving(tk.Frame):
             app.update_idletasks()
             # print("6: Progress updated to 100%")
             print("Carving process has finished.")
+            messagebox.showinfo("Nofication", "Carving process has finished.")
 
         # Remove the temp input file
         if os.path.exists(input_file):
@@ -849,6 +851,18 @@ class Popup(tk.Toplevel):
             "email_address": email_address,
             "directory": directory,
         }
+
+        toast = Notification(
+            app_id="DIFT",
+            title="Notification",
+            msg=f"Case {form_data['case_name']} was created successfuly",
+            icon=os.path.join(
+                os.path.dirname(os.path.realpath(__file__)), "images", "dift-logo.png"
+            ),
+            duration="short",
+        )
+        toast.set_audio(audio.SMS, loop=False)
+        toast.show()
 
         # Print the dictionary to the console
         # print(form_data)
