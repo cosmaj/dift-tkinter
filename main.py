@@ -16,6 +16,9 @@ import subprocess
 import threading
 import phonenumbers
 import time
+import getpass
+import platform
+from core.utils.dates import Utils
 from winotify import Notification, audio
 
 # -------------------------- DEFINING GLOBAL VARIABLES -------------------------
@@ -341,6 +344,11 @@ class ImageCarving(tk.Frame):
         output_image = os.path.join(temp_path, f"{uuid.uuid4()}.dd")
         self.run_dd(input_disk, output_image)
 
+        # Get disk image hash
+        disk_image_md5, disk_image_sha1 = self.calulate_hashes(output_image)
+        form_data["disk_image_md5_begin"] = disk_image_md5
+        form_data["disk_image_sha1_begin"] = disk_image_sha1
+
         # call Execute scalpel
         self.start_carving(output_image, form_data["directory"])
 
@@ -621,6 +629,29 @@ class ImageCarving(tk.Frame):
                 )
                 accumulated_bytes = 0  # Reset accumulated_bytes for each pass
 
+            # Try get the recovery summary
+            if line.strip().startswith("jpg with header") and line.strip().endswith(
+                "files"
+            ):
+                jpg_count = line.strip().split()[-2]
+                try:
+                    jpg_count = int(jpg_count)
+                    form_data["jpg_count"] = jpg_count
+                    del jpg_count
+                except Exception as err:
+                    print(f"Error while processing jpg result summary: {err}")
+
+            elif line.strip().startswith("png with header") and line.strip().endswith(
+                "files"
+            ):
+                png_count = line.strip().split()[-2]
+                try:
+                    png_count = int(png_count)
+                    form_data["png_count"] = png_count
+                    del png_count
+                except Exception as err:
+                    print(f"Error while processing png result summary: {err}")
+
             # Check if carving is finished
             if (
                 current_pass == total_passes
@@ -637,8 +668,13 @@ class ImageCarving(tk.Frame):
         if current_pass == total_passes:
             image_curving_progress_var.set(max_value)
             app.update_idletasks()
-            # print("6: Progress updated to 100%")
-            print("Carving process has finished.")
+
+            # Calculate disk image hash
+            disk_image_md5, disk_image_sha1 = self.calulate_hashes(input_file)
+            form_data["disk_image_md5_end"] = disk_image_md5
+            form_data["disk_image_sha1_end"] = disk_image_sha1
+            # form_data["data_curving_ended_at"] = self.ge
+
             messagebox.showinfo("Nofication", "Carving process has finished.")
 
         # Remove the temp input file
@@ -649,6 +685,17 @@ class ImageCarving(tk.Frame):
                 print(f"Failed to remove the input file: {input_file}")
                 print(f"Error: {err}")
         print("7: Exiting update_progress_bar function")
+        print(form_data)
+
+    def calulate_hashes(self, file_name=None):
+        from hashlib import md5, sha1
+        from mmap import mmap, ACCESS_READ
+
+        if file_name:
+            with open(file_name) as file, mmap(
+                file.fileno(), 0, access=ACCESS_READ
+            ) as file:
+                return md5(file).hexdigest(), sha1(file).hexdigest()
 
     def start_carving(self, input_file, output_folder):
 
@@ -730,6 +777,18 @@ class Popup(tk.Toplevel):
 
         # Make the input fields expand to fill the available space
         self.columnconfigure(1, weight=1)
+
+        # # Create Case Details Frame
+        # case_details_frame = tk.LabelFrame(self, text="Case Details")
+        # case_details_frame.pack(pady=5, padx=2, fill="x")
+
+        # # Create Evidence Details Frame
+        # evidence_details_frame = tk.LabelFrame(self, text="Ecidence/Device Details")
+        # evidence_details_frame.pack(pady=5, padx=2, fill="x")
+
+        # # Investigator Details Frame
+        # investigator_details_frame = tk.LabelFrame(self, text="investigator Details")
+        # investigator_details_frame.pack(pady=5, padx=2, fill="x")
 
         # Create the entry fields
         self.case_name_label = tk.Label(self, text="Case Name:")
@@ -843,14 +902,22 @@ class Popup(tk.Toplevel):
         # Store the data in a dictionary
         global form_data
         form_data = None
+        p_form = platform.uname()
+        current_time = Utils()
         form_data = {
             "case_name": case_name,
             "case_number": case_number,
+            "case_created_at": current_time.get_current_time(self),
             "investigator_name": investigator_name,
             "investigator_phone": investigator_phone,
             "email_address": email_address,
             "directory": directory,
+            "host_os": f"{p_form.system} {p_form.release}",
+            "host_name": p_form.node,
+            "cpu": p_form.machine,
+            "logon_user": getpass.getuser(),
         }
+        del p_form
 
         toast = Notification(
             app_id="DIFT",

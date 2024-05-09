@@ -1,4 +1,11 @@
-psutil==5.9.8
-tk==0.1.0
-phonenumbers
-pillow
+Package      Version
+------------ -------
+phonenumbers 8.13.35
+pillow       10.3.0
+pip          24.0
+psutil       5.9.8
+pywin32      306
+tk           0.1.0
+ttkbootstrap 1.10.1
+winotify     1.1.0
+WMI          1.5.1
