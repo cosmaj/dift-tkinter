@@ -34,9 +34,9 @@ visualisation_frame_color = "#ffffff"
 class TkinterApp(tk.Tk):
     """
     The class creates a header and sidebar for the application. Also creates
-    two submenus in the sidebar, one for Image curving with options to
-    Disk mount and beggin recovery and another for
-    Image Autheticity check, with options to upload image and analyse the
+    two submenus in the sidebar, one for Image carving with options to
+    Disk mount and begin recovery and another for
+    Image Authenticity check, with options to upload image and analyse the
     image.
     """
 
@@ -106,7 +106,9 @@ class TkinterApp(tk.Tk):
             )
         )
         submenu1.options["Image Authenticity"].config(
-            command=lambda: self.show_frame(ImageAutheticity, "Image Autheticity Check")
+            command=lambda: self.show_frame(
+                ImageAuthenticity, "Image Autheticity Check"
+            )
         )
 
         submenu1.place(relx=0, rely=0.025, relwidth=1, relheight=0.3)
@@ -122,7 +124,7 @@ class TkinterApp(tk.Tk):
         for F in (
             Home,
             ImageCarving,
-            ImageAutheticity,
+            ImageAuthenticity,
         ):
 
             frame = F(container, self)
@@ -144,7 +146,7 @@ class TkinterApp(tk.Tk):
         """
         frame = self.frames[cont]
 
-        # Check if the clicked button is ImageCurving to refresh the available disks
+        # Check if the clicked button is ImageCarving to refresh the available disks
         if cont == ImageCarving:
             frame.refresh_data()
 
@@ -296,29 +298,29 @@ class ImageCarving(tk.Frame):
         )
         progress_bar.pack(pady=10, padx=10, fill="x")
 
-        # Curving Progress Frame
-        image_recovering_frame = tk.LabelFrame(self, text="Image Curving")
+        # Carving Progress Frame
+        image_recovering_frame = tk.LabelFrame(self, text="Image Carving")
         image_recovering_frame.pack(pady=5, padx=2, fill="x")
 
         # Create a progress bar
-        global image_curving_progress_var
-        image_curving_progress_var = tk.DoubleVar(value=0)
-        global curving_progress_bar
-        curving_progress_bar = ttk.Progressbar(
+        global image_carving_progress_var
+        image_carving_progress_var = tk.DoubleVar(value=0)
+        global carving_progress_bar
+        carving_progress_bar = ttk.Progressbar(
             image_recovering_frame,
             length=200,
             mode="determinate",
             orient="horizontal",
-            variable=image_curving_progress_var,
+            variable=image_carving_progress_var,
         )
-        curving_progress_bar.pack(pady=10, padx=10, fill="x")
+        carving_progress_bar.pack(pady=10, padx=10, fill="x")
 
-        # Start Curving button
+        # Start Carving button
         # Create Save and Cancel buttons
         self.curve_button = tk.Button(
             self,
             text="Start Recovery",
-            command=self.begin_curving,
+            command=self.begin_carving,
             bg=header_color,
             fg="white",
             padx=10,
@@ -331,9 +333,9 @@ class ImageCarving(tk.Frame):
         # Grid the Save and Cancel buttons at the bottom right of the form
         self.curve_button.pack(side="bottom", anchor="e", padx=10, pady=10)
 
-    def begin_curving(self):
+    def begin_carving(self):
         # Validate the form fields
-        if not self.validate_before_curving():
+        if not self.validate_before_carving():
             return
 
         # Get Input disk(disk letter) from the selected disk
@@ -345,14 +347,14 @@ class ImageCarving(tk.Frame):
         self.run_dd(input_disk, output_image)
 
         # Get disk image hash
-        disk_image_md5, disk_image_sha1 = self.calulate_hashes(output_image)
+        disk_image_md5, disk_image_sha1 = self.calculate_hashes(output_image)
         form_data["disk_image_md5_begin"] = disk_image_md5
         form_data["disk_image_sha1_begin"] = disk_image_sha1
 
         # call Execute scalpel
         self.start_carving(output_image, form_data["directory"])
 
-    def validate_before_curving(self):
+    def validate_before_carving(self):
         # Check if Case was created
         try:
             if form_data:
@@ -551,7 +553,7 @@ class ImageCarving(tk.Frame):
     def update_disk_copying_progress(self, value):
         disk_image_progress_var.set(value)
 
-    # Recovering/Curving process by Scalpel
+    # Recovering/Carving process by Scalpel
     def execute_scalpel(self, input_file, output_folder):
         current_directory = os.path.dirname(os.path.realpath(__file__))
         command = [
@@ -571,11 +573,11 @@ class ImageCarving(tk.Frame):
         return process
 
     def update_progress_bar(
-        self, input_file, curving_progress_bar, image_curving_progress_var, process
+        self, input_file, carving_progress_bar, image_carving_progress_var, process
     ):
-        image_curving_progress_var.set(0)
+        image_carving_progress_var.set(0)
         max_value = 100
-        curving_progress_bar.config(maximum=max_value)
+        carving_progress_bar.config(maximum=max_value)
         app.update_idletasks()
         # print("1: Progress bar configured")
 
@@ -604,7 +606,7 @@ class ImageCarving(tk.Frame):
 
                 try:
                     # print(f"Data type: {type(percentage_str)}, Value: {percentage_str}")
-                    image_curving_progress_var.set(float(percentage_str))
+                    image_carving_progress_var.set(float(percentage_str))
                     app.update_idletasks()
                 except Exception as err:
                     print("Issue while processing percentage string")
@@ -614,9 +616,9 @@ class ImageCarving(tk.Frame):
                 # processed_bytes = int(processed_mb * 1024 * 1024)
                 # accumulated_bytes += processed_bytes
                 # if pass_started:
-                #     image_curving_progress_var.set(int((accumulated_bytes / file_size) * max_value))
+                #     image_carving_progress_var.set(int((accumulated_bytes / file_size) * max_value))
                 #     root.update_idletasks()
-                #     print(f"4: Progress updated to {image_curving_progress_var.get()}")
+                #     print(f"4: Progress updated to {image_carving_progress_var.get()}")
 
             # Check for the current pass and total passes
             pass_match = re.search(r"Image file pass (\d+)/(\d+)\.", line)
@@ -666,14 +668,14 @@ class ImageCarving(tk.Frame):
 
         # Update the progress bar to 100% when all passes are completed
         if current_pass == total_passes:
-            image_curving_progress_var.set(max_value)
+            image_carving_progress_var.set(max_value)
             app.update_idletasks()
 
             # Calculate disk image hash
-            disk_image_md5, disk_image_sha1 = self.calulate_hashes(input_file)
+            disk_image_md5, disk_image_sha1 = self.calculate_hashes(input_file)
             form_data["disk_image_md5_end"] = disk_image_md5
             form_data["disk_image_sha1_end"] = disk_image_sha1
-            # form_data["data_curving_ended_at"] = self.ge
+            # form_data["data_carving_ended_at"] = self.ge
 
             messagebox.showinfo("Nofication", "Carving process has finished.")
 
@@ -687,7 +689,7 @@ class ImageCarving(tk.Frame):
         print("7: Exiting update_progress_bar function")
         print(form_data)
 
-    def calulate_hashes(self, file_name=None):
+    def calculate_hashes(self, file_name=None):
         from hashlib import md5, sha1
         from mmap import mmap, ACCESS_READ
 
@@ -705,20 +707,20 @@ class ImageCarving(tk.Frame):
             target=self.update_progress_bar,
             args=(
                 input_file,
-                curving_progress_bar,
-                image_curving_progress_var,
+                carving_progress_bar,
+                image_carving_progress_var,
                 process,
             ),
         )
         progress_thread.start()
 
 
-class ImageAutheticity(tk.Frame):
+class ImageAuthenticity(tk.Frame):
     def __init__(self, parent, controller):
 
         tk.Frame.__init__(self, parent)
 
-        label = tk.Label(self, text="Check Image Autheticity", font=("Arial", 15))
+        label = tk.Label(self, text="Check Image Authenticity", font=("Arial", 15))
         label.pack()
 
 
