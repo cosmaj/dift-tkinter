@@ -720,8 +720,171 @@ class ImageAuthenticity(tk.Frame):
 
         tk.Frame.__init__(self, parent)
 
-        label = tk.Label(self, text="Check Image Authenticity", font=("Arial", 15))
-        label.pack()
+        # Create the main frame to hold the label and button
+        main_frame = tk.Frame(self)
+        main_frame.pack(fill=tk.X, pady=10)
+
+        # Create the main frame to hold the label and button
+        main_frame = tk.Frame(self)
+        main_frame.pack(fill=tk.X, pady=10)
+
+        # Create a frame to hold the label
+        label_frame = tk.Frame(main_frame)
+        label_frame.pack(side=tk.LEFT, expand=True, fill=tk.X)
+
+        # Create and pack the label into the label_frame
+        label = tk.Label(
+            label_frame, text="Upload image with .jpg or .png file extension"
+        )
+        label.pack(side=tk.LEFT, padx=5)
+
+        # Create and pack the button into the main_frame
+        button = tk.Button(main_frame, text="Choose Image", command=self.choose_image)
+        button.pack(side=tk.RIGHT, padx=5)
+
+        # Create a label to display the result (file path and name)
+        global result_label
+        result_label = tk.Label(self, text="")
+        result_label.pack(pady=10)
+
+        # Creating image analysis Progress Frame
+        image_analysis_frame = tk.LabelFrame(self, text="Image Authenticity check")
+        image_analysis_frame.pack(pady=3, padx=2, fill="x")
+
+        # Create a progress bar
+        global image_analysis_progress_var
+        image_analysis_progress_var = tk.DoubleVar(value=0)
+        progress_bar = ttk.Progressbar(
+            image_analysis_frame,
+            length=200,
+            mode="determinate",
+            orient="horizontal",
+            variable=image_analysis_progress_var,
+        )
+        progress_bar.pack(pady=10, padx=10, fill="x")
+
+        # Forgery Localization Progress Frame
+        localization_frame = tk.LabelFrame(self, text="Forgery localization")
+        localization_frame.pack(pady=5, padx=2, fill="x")
+
+        # Create a progress bar
+        global localization_progress_var
+        localization_progress_var = tk.DoubleVar(value=0)
+        global localization_progress_bar
+        localization_progress_bar = ttk.Progressbar(
+            localization_frame,
+            length=200,
+            mode="determinate",
+            orient="horizontal",
+            variable=localization_progress_var,
+        )
+        localization_progress_bar.pack(pady=10, padx=10, fill="x")
+
+        # Start Carving button
+        # Create Save and Cancel buttons
+        self.image_analysis_button = tk.Button(
+            self,
+            text="Start Analysis",
+            command=self.begin_image_analysis,
+            bg=header_color,
+            fg="white",
+            padx=10,
+            pady=5,
+            borderwidth=0,
+            relief="flat",
+            font=("Arial", 12, "bold"),
+        )
+
+        # Grid the Save and Cancel buttons at the bottom right of the form
+        self.image_analysis_button.pack(side="bottom", anchor="e", padx=10, pady=10)
+
+    def choose_image(self):
+        while True:
+            # Prompt the user to select a file
+            file_path = filedialog.askopenfilename(
+                filetypes=[("Image files", "*.jpg *.png")]
+            )
+
+            # Check if the user selected a valid file
+            if file_path.lower().endswith((".jpg", ".jpeg", ".png")):
+                # Save the image path to form_data
+                form_data["image_name"] = file_path
+
+                #  Testing here and there
+                metadata = self.extract_metadata(form_data["image_name"])
+                print(f"Image Metadata: {metadata}")  # testing
+
+                file_size = os.path.getsize(file_path)
+                print(f"Old image size: {os.path.getsize(form_data['image_name'])}")
+                if file_size > 1 * 1024 * 1024:
+                    file_path = self.compress_image(file_path)
+                    form_data["image_name"] = file_path
+
+                    # Check new image size
+                    print(f"New image size: {os.path.getsize(form_data['image_name'])}")
+                # Display the file path and name in green color
+                result_label.config(text=file_path, fg="green")
+                break
+            else:
+                # Show a warning dialog and prompt the user again
+                messagebox.showwarning(
+                    "Invalid file", "Please select a .jpg or .png file."
+                )
+
+    # Compress image if it exceeds 1MB
+    def compress_image(self, file_path):
+        img = Image.open(file_path)
+        output_path = os.path.join("input_images", os.path.basename(file_path))
+
+        # Ensure the output directory exists
+        if not os.path.exists("input_images"):
+            os.makedirs("input_images")
+
+        # Compress image
+        quality = 85
+        img.save(output_path, quality=quality, optimize=True)
+        while os.path.getsize(output_path) > 1 * 1024 * 1024 and quality > 10:
+            quality -= 10
+            img.save(output_path, quality=quality, optimize=True)
+
+        return output_path
+
+    def extract_metadata(self, file_path):
+        # Using exifread
+        import exifread
+
+        with open(file_path, "rb") as f:
+            tags = exifread.process_file(f)
+
+        my_data = {tag: str(value) for tag, value in tags.items()}
+        return my_data
+
+        # {print(f"File path: {file_path}")
+        # from PIL import Image
+        # from PIL.ExifTags import TAGS
+
+        # # read the image data using PIL
+        # image = Image.open(file_path)
+
+        # extracting the exif metadata
+        exifdata = image.getexif()
+
+        # looping through all the tags present in exifdata
+        for tagid in exifdata:
+
+            # getting the tag name instead of tag id
+            tagname = TAGS.get(tagid, tagid)
+
+            # passing the tagid to get its respective value
+            value = exifdata.get(tagid)
+
+            # printing the final result
+            print(f"{tagname:25}: {value}")
+        #     my_data[tag:25] = value
+        # return my_data}
+
+    def begin_image_analysis(self):
+        print("Image Analysis button clicked")
 
 
 # ----------------------------- CUSTOM WIDGETS ---------------------------------
