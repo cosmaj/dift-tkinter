@@ -4,11 +4,15 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>DIFT Report</title>
+    <!-- <link rel="stylesheet" href="./static_files/tailwind.min.css_1.3.5/cdnjs/tailwind.min.css"> -->
+    <link rel="stylesheet" href="{{css_path}}">
     <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
-    <link href="./static_files/css/tailwind.min.css" rel="stylesheet">
+
+
     <!-- Font Awesome CDN link -->
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
-    <link rel="stylesheet" href="./static_files/fontawesome/css/fontawesome.min.css">
+     <!-- <link rel="stylesheet" href="./static_files/fontawesome/css/all.css"> -->
+     <link rel="stylesheet" href="{{font_awesome_path}}">
+     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
     <style>
         .dropdown-title::after {
             content: " ▼";
@@ -46,7 +50,7 @@
     <div class="container mx-auto p-4 bg-white shadow-md rounded-lg">
         <header class="flex items-center justify-between mb-6">
             <div class="flex items-center">
-                <img src="./static_files/img/dift-logo.png" alt="Applocation Logo" class="w-16 h-16 rounded-full mr-4">
+                <img src="{{logo_path}}" alt="Application Logo" class="w-16 h-16 rounded-full mr-4">
             </div>
             <div class="text-right">
                 <h1 class="text-2xl font-bold text-blue-800">Digital Image Forensics Tool Report </h1>
@@ -55,14 +59,17 @@
         <section class="bg-blue-50 p-4 rounded-lg mb-6">
             <div class="text-right">
                 <div class="text-xl font-semibold"> <i class="fas fa-user-secret"></i> Case Name: <span class="font-bold text-blue-800"> {{case_name}}</span></div>
-                <div class="text-xl font-semibold"> <i class="fas fa-file"></i> Case Evidence Number: <span class="font-bold text-blue-800">{{case_evidence_num}}</span> </div>
+                <div class="text-xl font-semibold">
+                    <i class="fas fa-file"></i>
+                    Case Number: <span class="font-bold text-blue-800">{{case_number}}</span>
+                </div>
             </div>
         </section>
         <section class="case-information bg-gray-50 p-4 rounded-lg mb-6">
             <div class="section-title text-xl font-semibold border-b-2 border-yellow-500 mb-4">Case Information <i class="fas fa-info-circle"></i></div>
             <ul class="list-unstyled">
-                <li><i class="fas fa-user"> </i> Submitted by: {{submitted_by}} </li>
-                <li> <i class="fas fa-calendar-alt"></i>Submission Date: {{submission_date}}</li>
+                <li><i class="fas fa-user"> </i> Submitted by: {{investigator_name}} </li>
+                <li> <i class="fas fa-calendar-alt"></i>Submission Date: {{case_created_at}}</li>
             </ul>
         </section>
         <section class="case-summary bg-gray-50 p-4 rounded-lg mb-6">
@@ -72,10 +79,8 @@
         <section class="evidence-information bg-gray-50 p-4 rounded-lg mb-6">
             <div class="section-title text-xl font-semibold border-b-2 border-yellow-500 mb-4">Evidence Information <i class="fas fa-briefcase"></i></div>
             <ul class="list-unstyled">
-                <li><i class="fas fa-tag"></i> Device Label: {{device_label}}</li>
-                <li><i class="fas fa-laptop"> </i> Name: {{device_name}}</li>
-                <li><i class="fas fa-id-card"></i> Device ID: {{device_id}}</li>
-                <li><i class="fas fa-file"></i> Device Evidence Number: {{evidence_number}}</li>
+                <li><i class="fas fa-laptop"> </i> Name: {{evidence_name}}</li>
+                <li><i class="fas fa-file"></i> Evidence Number: {{evidence_number}}</li>
                 <li> <i class="fas fa-user"></i> Owner Name: {{evidence_owner}}</li>
                 <li> <i class="fas fa-phone"></i>Owner's Phone Number: {{evidence_owner_phone}}</li>
             </ul>
@@ -84,7 +89,7 @@
             <section class="investigator-information bg-gray-50 p-4 rounded-lg">
                 <div class="section-title text-xl font-semibold border-b-2 border-yellow-500 mb-4">Investigator Information <i class="fas fa-user-tie"></i></div>
                 <div class="flex items-center mb-4">
-                    <img src="{{investigator_logo}}" alt="Investigator Logo" class="w-24 h-24 rounded-full mr-4">
+                    <img src="{{logo_path}}" alt="Investigator Logo" class="w-24 h-24 rounded-full mr-4">
                     <ul class="list-unstyled">
                         <li>
                             <i class="fas fa-user"></i>
@@ -96,7 +101,7 @@
                         </li>
                         <li>
                             <i class="fas fa-envelope"></i>
-                            Investigator email: {{investigator_email}}
+                            Investigator email: {{investigator_email_address}}
                         </li>
                         <li>
                             <i class="fas fa-phone"></i>
@@ -104,7 +109,7 @@
                         </li>
                         <li>
                             <i class="fas fa-search"></i>
-                            Search warrant[Reference #]: {{search_warant_reference}}
+                            Search warrant[Reference #]: {{search_warrant_reference}}
                         </li>
                     </ul>
                 </div>
@@ -114,11 +119,11 @@
                 <ul class="list-unstyled">
                     <li>
                         <i class="fas fa-calendar-plus"></i>
-                        Date extraction started: {{extraction_start}}
+                        Date extraction started: {{carving_started_at}}
                     </li>
                     <li>
                         <i class="fas fa-calendar-minus"></i>
-                        Date extraction ended: {{extraction_end}}
+                        Date extraction ended: {{carving_end_at}}
                     </li>
                     <li>
                         <i class="fas fa-wrench"></i>
@@ -140,19 +145,23 @@
             </section>
         </div>
         <section class="workstation-information bg-gray-50 p-4 rounded-lg mb-6">
-            <div class="section-title text-xl font-semibold border-b-2 border-yellow-500 mb-4"><i class="fas fa-desktop mr-2"></i>Workstation Information</div>
+            <div class="section-title text-xl font-semibold border-b-2 border-yellow-500 mb-4">Workstation Information<i class="fas fa-desktop ml-2"></i></div>
             <ul class="list list-unstyled">
                 <li>
                     <i class="fas fa-desktop"></i>
-                    Device Name (Host Name): {{host_name}}
+                    Host Name: {{host_name}}
                 </li>
                 <li>
                     <i class="fab fa-windows"></i>
                     Operating System: {{host_os}}
                 </li>
                 <li>
+                    <i class="fa-solid fa-microchip"></i>
+                    Processor: {{cpu}}
+                </li>
+                <li>
                     <i class="fas fa-user"></i>
-                    User: {{host_user}}
+                    User: {{logon_user}}
                 </li>
                 <li>
                     <i class="fas fa-toolbox"></i>
@@ -160,22 +169,29 @@
                 </li>
                 <li>
                     <i class="fas fa-network-wired"></i>
-                    Device MAC address: {{host_mac}}
+                    Device MAC address:
+                    {% for interface, mac in host_macs %}
+                        [{{interface}}: {{mac}}]
+                    {% endfor %}
                 </li>
                 <li>
                     <i class="fas fa-globe"></i>
                     Timezone: {{host_timezote}}
                 </li>
+                <li>
+                    <i class="fa-regular fa-clock"></i>
+                    UTC Time: {{utc_time}}
+                </li>
             </ul>
         </section>
         <section class="image-authenticity bg-gray-50 p-4 rounded-lg mb-6">
-            <div class="section-title text-xl font-semibold border-b-2 border-yellow-500 mb-4"><i class="fa fa-check-square mr-2" aria-hidden="true"></i>Image Authenticity Check
+            <div class="section-title text-xl font-semibold border-b-2 border-yellow-500 mb-4">Image Authenticity Check<i class="fa fa-check-square ml-2" aria-hidden="true"></i>
             </div>
             <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
                     <div class="text-center font-semibold mb-2">Input Image</div>
                     <div class="box image-container bg-white p-4 rounded-lg shadow-md">
-                        <img src="{{uploaded_image}}" alt="Uploaded Image" class="w-full h-auto mb-4">
+                        <img src="{{input_image}}" alt="Uploaded Image" class="w-full h-auto mb-4">
                         <div class="overflow-x-auto">
                             <table class="table-auto w-full">
                                 <thead>
@@ -187,12 +203,20 @@
                                 </thead>
                                 <tbody>
                                     <tr>
-                                        <td class="border px-4 py-2"><b>Hash value before</b></td>
-                                        <td class="border px-4 py-2">80%</td>
+                                        <td class="border px-4 py-2">
+                                            <b>Initial MD5 file HASH</b>
+                                        </td>
+                                        <td class="border px-4 py-2">
+                                            {{image_md5_start}}
+                                        </td>
                                     </tr>
                                     <tr>
-                                        <td class="border px-4 py-2"><b> Value after</b></td>
-                                        <td class="border px-4 py-2">70%</td>
+                                        <td class="border px-4 py-2">
+                                            <b>Final MD5 file HASH</b>
+                                        </td>
+                                        <td class="border px-4 py-2">
+                                            {{image_md5_end}}
+                                        </td>
                                     </tr>
                                 </tbody>
                             </table>
@@ -203,7 +227,7 @@
                 <div>
                     <div class="text-center font-semibold mb-2">Localization of Image</div>
                     <div class="box image-container bg-white p-4 rounded-lg shadow-md">
-                        <img src="{{forgery_localization}}" alt="Forgery localization on Image" class="w-full h-auto mb-4">
+                        <img src="{{output_image}}" alt="Forgery localization on Image" class="w-full h-auto mb-4">
                         <div class="overflow-x-auto">
                             <table class="table-auto w-full">
                                 <thead>
@@ -250,51 +274,17 @@
                 <table class="table-auto w-full">
                     <thead>
                         <tr>
-                            <th class="px-4 py-2"><b></b>Field</th>
-                            <th class="px-4 py-2">Value</th>
+                            <th class="px-4 py-2"></th>
+                            <th class="px-4 py-2"></th>
                         </tr>
                     </thead>
                     <tbody>
-                        <tr>
-                            <td class="border px-4 py-2"><b>File Name</b></td>
-                            <td class="border px-4 py-2">example.jpg</td>
-                        </tr>
-                        <tr>
-                            <td class="border px-4 py-2"><b>File Size</b></td>
-                            <td class="border px-4 py-2">2.3 MB</td>
-                        </tr>
-                        <tr>
-                            <td class="border px-4 py-2"><b>File Type</b></td>
-                            <td class="border px-4 py-2">JPEG</td>
-                        </tr>
-                        <tr>
-                            <td class="border px-4 py-2"><b>Creation Date</b></td>
-                            <td class="border px-4 py-2">2024-06-16</td>
-                        </tr>
-                        <tr>
-                            <td class="border px-4 py-2"><b> Date<b></b></td>
-                            <td class="border px-4 py-2">2024-06-16</td>
-                        </tr>
-                        <tr>
-                            <td class="border px-4 py-2"><b> Model</b></td>
-                            <td class="border px-4 py-2">Canon EOS 5D Mark IV</td>
-                        </tr>
-                        <tr>
-                            <td class="border px-4 py-2"><b>Resolution</b></td>
-                            <td class="border px-4 py-2">6720 x 4480</td>
-                        </tr>
-                        <tr>
-                            <td class="border px-4 py-2"><b>Color Space</b></td>
-                            <td class="border px-4 py-2">sRGB</td>
-                        </tr>
-                        <tr>
-                            <td class="border px-4 py-2"><b> Latitude</b></td>
-                            <td class="border px-4 py-2">37.7749° N</td>
-                        </tr>
-                        <tr>
-                            <td class="border px-4 py-2"><b>GPS Longitude</b></td>
-                            <td class="border px-4 py-2">122.4194° W</td>
-                        </tr>
+                        {% for key, value in image_metadata.items() %}
+                            <tr>
+                                <td class="border px-4 py-2"><b>{{key}}</b></td>
+                                <td class="border px-4 py-2">{{value}}</td>
+                            </tr>
+                        {% endfor %}
                     </tbody>
                 </table>
             </div>
@@ -338,5 +328,6 @@
             }
         }
     </script>
+    <script src="{{js_path}}"></script>
 </body>
 </html>
