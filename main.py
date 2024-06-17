@@ -2,6 +2,7 @@ import re
 import tkinter as tk
 from tkinter import ttk
 from tkinter import filedialog
+from tkinter import font
 
 # import ttkbootstrap as tb
 # from ttkbootstrap.toast import ToastNotification
@@ -18,9 +19,17 @@ import phonenumbers
 import time
 import getpass
 import platform
+import shutil
 from core.utils.dates import Utils
 from winotify import Notification, audio
 from PIL import Image
+from core.utils.reports import generate_report
+from core.utils.file_digest import calculate_hashes
+from core.utils.system_info import (
+    get_utc_time,
+    get_system_timezone,
+    get_all_mac_addresses,
+)
 
 # -------------------------- DEFINING GLOBAL VARIABLES -------------------------
 
@@ -260,16 +269,12 @@ class ImageCarving(tk.Frame):
         self.tree.column("five", width=150, minwidth=150, stretch=tk.YES)
 
         # Define the column headings
-        # self.tree.heading("#0", text="Disk Name", anchor=tk.W)
-        # self.tree.heading("one", text="Mounting point", anchor=tk.W)
-        # self.tree.heading("two", text="FS Type", anchor=tk.W)
-        # self.tree.heading("three", text="Size", anchor=tk.W)
         self.tree.heading("#0", text="Disk", anchor=tk.W)
         self.tree.heading("one", text="Mountpoint", anchor=tk.W)
-        self.tree.heading("two", text="Fstype", anchor=tk.W)
-        self.tree.heading("three", text="Opts", anchor=tk.W)
-        self.tree.heading("four", text="Total", anchor=tk.W)
-        self.tree.heading("five", text="Used", anchor=tk.W)
+        self.tree.heading("two", text="Type", anchor=tk.W)
+        self.tree.heading("three", text="Total", anchor=tk.W)
+        self.tree.heading("four", text="Used", anchor=tk.W)
+        self.tree.heading("five", text="Free", anchor=tk.W)
 
         # Bind the treeview selection event to a method
         self.tree.bind("<<TreeviewSelect>>", self.on_disk_select)
@@ -345,10 +350,12 @@ class ImageCarving(tk.Frame):
         # Get output disk image
         temp_path = tempfile.gettempdir()
         output_image = os.path.join(temp_path, f"{uuid.uuid4()}.dd")
+        carving_started_at = Utils().get_current_time(self)
+        form_data["carving_started_at"] = carving_started_at
         self.run_dd(input_disk, output_image)
 
         # Get disk image hash
-        disk_image_md5, disk_image_sha1 = self.calculate_hashes(output_image)
+        disk_image_md5, disk_image_sha1 = calculate_hashes(output_image)
         form_data["disk_image_md5_begin"] = disk_image_md5
         form_data["disk_image_sha1_begin"] = disk_image_sha1
 
@@ -381,22 +388,6 @@ class ImageCarving(tk.Frame):
 
         disk_instance = self.Disk()
         self.disks = disk_instance.get_disks()
-        # print(self.disks)
-
-        # # Add the disks to the Treeview
-        # for disk in self.disks:
-        #     self.tree.insert(
-        #         "",
-        #         0,
-        #         text=disk["device"],
-        #         values=(
-        #             disk["mountpoint"],
-        #             disk["fstype"],
-        #             disk["opts"],
-        #             disk["disk_usage"]["total"],
-        #             disk["disk_usage"]["used"],
-        #         ),
-        #     )
 
         # Add the disks to the Treeview
         for i, disk in enumerate(self.disks):
@@ -408,9 +399,10 @@ class ImageCarving(tk.Frame):
                     values=(
                         disk["mountpoint"],
                         disk["fstype"],
-                        disk["opts"],
+                        # disk["opts"],
                         disk["disk_usage"]["total"],
                         disk["disk_usage"]["used"],
+                        disk["disk_usage"]["free"],
                     ),
                     tags=("evenrow",),
                 )
@@ -422,9 +414,10 @@ class ImageCarving(tk.Frame):
                     values=(
                         disk["mountpoint"],
                         disk["fstype"],
-                        disk["opts"],
+                        # disk["opts"],
                         disk["disk_usage"]["total"],
                         disk["disk_usage"]["used"],
+                        disk["disk_usage"]["free"],
                     ),
                     tags=("oddrow",),
                 )
@@ -673,12 +666,23 @@ class ImageCarving(tk.Frame):
             app.update_idletasks()
 
             # Calculate disk image hash
-            disk_image_md5, disk_image_sha1 = self.calculate_hashes(input_file)
+            disk_image_md5, disk_image_sha1 = calculate_hashes(input_file)
             form_data["disk_image_md5_end"] = disk_image_md5
             form_data["disk_image_sha1_end"] = disk_image_sha1
             # form_data["data_carving_ended_at"] = self.ge
 
+            carving_end_at = Utils().get_current_time(self)
+            form_data["carving_end_at"] = carving_end_at
+
             messagebox.showinfo("Notification", "Carving process has finished.")
+            check_image_authenticity = messagebox.askyesno(
+                title="", message="Do you want to proceed with Image Authenticity?"
+            )
+            if check_image_authenticity == False:
+                form_data["exclude_image_authenticity"] = True
+                print("User wanna end here, Generate report!")
+                current_dir = os.path.dirname(os.path.abspath(__file__))
+                generate_report(self, current_dir=current_dir, context=form_data)
 
         # Remove the temp input file
         if os.path.exists(input_file):
@@ -689,16 +693,6 @@ class ImageCarving(tk.Frame):
                 print(f"Error: {err}")
         print("7: Exiting update_progress_bar function")
         print(form_data)
-
-    def calculate_hashes(self, file_name=None):
-        from hashlib import md5, sha1
-        from mmap import mmap, ACCESS_READ
-
-        if file_name:
-            with open(file_name) as file, mmap(
-                file.fileno(), 0, access=ACCESS_READ
-            ) as file:
-                return md5(file).hexdigest(), sha1(file).hexdigest()
 
     def start_carving(self, input_file, output_folder):
 
@@ -813,7 +807,7 @@ class ImageAuthenticity(tk.Frame):
 
                 #  Testing here and there
                 metadata = self.extract_metadata(file_path)
-                print(f"Image Metadata: {metadata}")  # testing
+                # print(f"Image Metadata: {metadata}")  # testing
                 form_data["image_metadata"] = metadata
 
                 # Save the image to folder
@@ -830,11 +824,20 @@ class ImageAuthenticity(tk.Frame):
                 output_path = os.path.join(input_folder_path, file_name)
                 form_data["image_name"] = output_path
 
-                # Open the image and save it to the output folder
-                image = Image.open(file_path)
-                image.save(output_path)
+                # Saving a file without modification
+                dest_path = os.path.join(input_folder_path, file_name)
+
+                # Copy the file to the input folder without modifying it
+                shutil.copyfile(file_path, dest_path)
 
                 # End save image to folder
+
+                # Get image hash
+                image_md5_start, image_sha1_start = calculate_hashes(
+                    file_name=form_data["image_name"]
+                )
+                form_data["image_md5_start"] = image_md5_start
+                form_data["image_sha1_start"] = image_sha1_start
                 # Display the file path and name in green color
                 result_label.config(text=file_path, fg="green")
                 break
@@ -845,7 +848,6 @@ class ImageAuthenticity(tk.Frame):
                 )
 
     def delete_directory_contents(self, folder_path):
-        import shutil
 
         try:
             for item in os.listdir(folder_path):
@@ -863,7 +865,10 @@ class ImageAuthenticity(tk.Frame):
         with open(file_path, "rb") as f:
             tags = exifread.process_file(f)
 
+        image_size = os.path.getsize(file_path) / (1024 * 1024)
         formatted_exif = {
+            "File Name": os.path.basename(file_path),
+            "File Size": f"{image_size:.2f} MB",
             "Camera Make": str(tags.get("Image Make", "Unknown")),
             "Camera Model": str(tags.get("Image Model", "Unknown")),
             "Image Resolution": f"{tags.get('Image XResolution', 'Unknown')} x {tags.get('Image YResolution', 'Unknown')} {tags.get('Image ResolutionUnit', 'Unknown')}",
@@ -906,41 +911,52 @@ class ImageAuthenticity(tk.Frame):
 
     def begin_image_analysis(self):
         print("Image Analysis button clicked")
-        self.generate_report()
 
-    def generate_report(self, context=None):
-        from jinja2 import Environment, FileSystemLoader
+        # Validate the form fields
+        if not self.validate_before_analysis():
+            return
 
+        # Check forgery probability
+        image_name = form_data["image_name"]
+        # 1. Copy-move forgery
+        # 2. Splicing forgery
+        # 3. Forgery localization
+
+        # Calculate final hash
+        image_md5_end, image_sha1_end = calculate_hashes(file_name=image_name)
+        form_data["image_md5_end"] = image_md5_end
+        form_data["image_sha1_end"] = image_sha1_end
+
+        # Get ready to generate report
+        print(f"\n\nForm data:\n{form_data}\n")
         current_dir = os.path.dirname(os.path.abspath(__file__))
+        try:
+            generate_report(current_dir, form_data)
+            # Display message
+            messagebox.showinfo(
+                title="Task Completed", message="Analysis completed successfully"
+            )
+        except Exception as e:
+            print(f"Error occurred: {e}")
+            messagebox.showerror(title="Error", message=f"Report generation failed")
 
-        # Construct the absolute path to the 'templates' directory
-        templates_dir = os.path.join(current_dir, "templates")
+    def validate_before_analysis(self):
+        # Check if Case was created
+        try:
+            if form_data:
+                ...
+        except:
+            messagebox.showwarning("Warning", "Start by creating new case")
+            return False
 
-        # Set up the environment with the absolute path to your templates directory
-        env = Environment(loader=FileSystemLoader(templates_dir))
+        try:
+            if form_data["image_name"]:
+                ...
+        except:
+            messagebox.showwarning("Warning", "Upload digital image to start analysis")
+            return False
 
-        # Load your template
-        template = env.get_template("template.html")
-
-        # Define your context (values for placeholders)
-        context = {
-            "title": "My Dynamic Web Page",
-            "heading": "This is a Dynamic Heading",
-            "content": "Here is some dynamic content.",
-            "case_name": "Chicken Thief",
-            "submitted_by": "John Doe",
-            "submission_date": "12/06/2024",
-            "case_summary": "PIL or pillow is one of the most powerful image manipulating modules in Python. It is most commonly used for reducing image size, implicitly or explicitly converting image from one format to another, save images, compressing images and much more.  As technology continues to advance, efficient image compression becomes increasingly important for both beginners and experts. How will image compression techniques evolve to meet the demands of future applications",
-        }
-
-        # Render the template with the context
-        html_output = template.render(context)
-
-        # Write the output to a new HTML file
-        with open("output.html", "w", encoding="utf-8") as file:
-            file.write(html_output)
-
-        print("New HTML file has been created based on the template.")
+        return True
 
 
 # ----------------------------- CUSTOM WIDGETS ---------------------------------
@@ -991,6 +1007,9 @@ class Popup(tk.Toplevel):
     def __init__(self, master):
         super().__init__(master)
 
+        # Create a custom font
+        custom_font = font.Font(family="Helvetica", size=12)
+
         self.title("New Project")
 
         # Set the size of the popup window
@@ -999,49 +1018,82 @@ class Popup(tk.Toplevel):
         # Make the input fields expand to fill the available space
         self.columnconfigure(1, weight=1)
 
-        # # Create Case Details Frame
-        # case_details_frame = tk.LabelFrame(self, text="Case Details")
-        # case_details_frame.pack(pady=5, padx=2, fill="x")
-
-        # # Create Evidence Details Frame
-        # evidence_details_frame = tk.LabelFrame(self, text="Ecidence/Device Details")
-        # evidence_details_frame.pack(pady=5, padx=2, fill="x")
-
-        # # Investigator Details Frame
-        # investigator_details_frame = tk.LabelFrame(self, text="investigator Details")
-        # investigator_details_frame.pack(pady=5, padx=2, fill="x")
-
         # Create the entry fields
-        self.case_name_label = tk.Label(self, text="Case Name:")
+        self.case_name_label = tk.Label(self, text="Case Name:", font=custom_font)
         self.case_name_entry = tk.Entry(
-            self, width=100
+            self, width=50, font=custom_font
         )  # Set the width of the input field
 
-        self.case_number_label = tk.Label(self, text="Case Number:")
+        self.case_number_label = tk.Label(self, text="Case Number:", font=custom_font)
         self.case_number_entry = tk.Entry(
-            self, width=100
+            self, width=50, font=custom_font
         )  # Set the width of the input field
 
-        self.investigator_name_label = tk.Label(self, text="Investigator Name:")
+        self.investigator_name_label = tk.Label(
+            self, text="Investigator Name:", font=custom_font
+        )
         self.investigator_name_entry = tk.Entry(
-            self, width=100
+            self, width=50, font=custom_font
         )  # Set the width of the input field
 
-        self.investigator_phone_label = tk.Label(self, text="Investigator Phone:")
+        self.investigator_phone_label = tk.Label(
+            self, text="Investigator Phone:", font=custom_font
+        )
         self.investigator_phone_entry = tk.Entry(
-            self, width=100
+            self, width=50, font=custom_font
         )  # Set the width of the input field
 
-        self.email_label = tk.Label(self, text="Email Address:")
-        self.email_entry = tk.Entry(self, width=100)  # Set the width of the input field
+        self.investigator_designation_label = tk.Label(
+            self, text="Investigator Designation:", font=custom_font
+        )
+        self.investigator_designation = tk.Entry(self, width=50, font=custom_font)
 
-        self.directory_label = tk.Label(self, text="Folder to store results:")
+        self.email_label = tk.Label(
+            self, text="Investigator e-mail Address:", font=custom_font
+        )
+        self.investigator_email_entry = tk.Entry(
+            self, width=50, font=custom_font
+        )  # Set the width of the input field
+
+        # Search warrant
+        self.search_warrant_reference_label = tk.Label(
+            self, text="Search warrant reference#:", font=custom_font
+        )
+        self.search_warrant_reference = tk.Entry(self, width=50, font=custom_font)
+
+        # Evidence details
+        self.evidence_name_label = tk.Label(
+            self, text="Evidence Name:", font=custom_font
+        )
+        self.evidence_name = tk.Entry(self, width=50, font=custom_font)
+
+        self.evidence_number_label = tk.Label(
+            self, text="Evidence #:", font=custom_font
+        )
+        self.evidence_number = tk.Entry(self, width=50, font=custom_font)
+
+        self.evidence_owner_label = tk.Label(
+            self, text="Evidence Owner:", font=custom_font
+        )
+        self.evidence_owner = tk.Entry(self, width=50, font=custom_font)
+
+        self.evidence_owner_phone_label = tk.Label(
+            self, text="Evidence Owner Phone#:", font=custom_font
+        )
+        self.evidence_owner_phone = tk.Entry(self, width=50, font=custom_font)
+
+        self.directory_label = tk.Label(
+            self, text="Folder to store results:", font=custom_font
+        )
         self.directory_entry = tk.Entry(
-            self, width=100
+            self, width=50, font=custom_font
         )  # Set the width of the input field
         self.browse_button = tk.Button(
             self, text="Browse", command=self.browse_directory
         )
+
+        self.case_summary_label = tk.Label(self, text="Case summary:", font=custom_font)
+        self.case_summary = tk.Text(self, height=2, width=60)
 
         # Create Save and Cancel buttons
         self.cancel_button = tk.Button(
@@ -1076,16 +1128,48 @@ class Popup(tk.Toplevel):
         self.investigator_phone_label.grid(row=3, column=0, padx=(20, 0), pady=(10, 10))
         self.investigator_phone_entry.grid(row=3, column=1, padx=(0, 20), pady=(10, 10))
 
-        self.email_label.grid(row=4, column=0, padx=(20, 0), pady=(10, 10))
-        self.email_entry.grid(row=4, column=1, padx=(0, 20), pady=(10, 10))
+        # Designation
+        self.investigator_designation_label.grid(
+            row=4, column=0, padx=(20, 0), pady=(10, 10)
+        )
+        self.investigator_designation.grid(row=4, column=1, padx=(0, 20), pady=(10, 10))
 
-        self.directory_label.grid(row=5, column=0, padx=(20, 0), pady=(10, 10))
-        self.directory_entry.grid(row=5, column=1, padx=(0, 20), pady=(10, 10))
-        self.browse_button.grid(row=5, column=2, padx=(0, 20), pady=(10, 10))
+        self.email_label.grid(row=5, column=0, padx=(20, 0), pady=(10, 10))
+        self.investigator_email_entry.grid(row=5, column=1, padx=(0, 20), pady=(10, 10))
+
+        # Search warrant
+        self.search_warrant_reference_label.grid(
+            row=6, column=0, padx=(20, 0), pady=(10, 10)
+        )
+        self.search_warrant_reference.grid(row=6, column=1, padx=(0, 20), pady=(10, 10))
+
+        # evidence owner
+        self.evidence_name_label.grid(row=7, column=0, padx=(20, 0), pady=(10, 10))
+        self.evidence_name.grid(row=7, column=1, padx=(0, 20), pady=(10, 10))
+
+        self.evidence_number_label.grid(row=8, column=0, padx=(20, 0), pady=(10, 10))
+        self.evidence_number.grid(row=8, column=1, padx=(0, 20), pady=(10, 10))
+
+        self.evidence_owner_label.grid(row=9, column=0, padx=(20, 0), pady=(10, 10))
+        self.evidence_owner.grid(row=9, column=1, padx=(0, 20), pady=(10, 10))
+
+        self.evidence_owner_phone_label.grid(
+            row=10, column=0, padx=(20, 0), pady=(10, 10)
+        )
+        self.evidence_owner_phone.grid(row=10, column=1, padx=(0, 20), pady=(10, 10))
+
+        self.directory_label.grid(row=11, column=0, padx=(20, 0), pady=(10, 10))
+        self.directory_entry.grid(row=11, column=1, padx=(0, 20), pady=(10, 10))
+        self.browse_button.grid(row=11, column=2, padx=(0, 20), pady=(10, 10))
+
+        self.case_summary_label.grid(row=12, column=0, padx=(20, 0), pady=(10, 10))
+        self.case_summary.grid(row=12, column=1, padx=(0, 20), pady=(10, 10))
 
         # Grid the Save and Cancel buttons at the bottom right of the form
-        self.cancel_button.grid(row=6, column=2, padx=(0, 10), pady=(10, 0), sticky="w")
-        self.save_button.grid(row=6, column=1, padx=(0, 10), pady=(10, 0), sticky="e")
+        self.cancel_button.grid(
+            row=13, column=2, padx=(0, 10), pady=(10, 0), sticky="w"
+        )
+        self.save_button.grid(row=13, column=1, padx=(0, 10), pady=(10, 0), sticky="e")
 
         # Make the popup form window the only window that can receive events
         self.grab_set()
@@ -1097,8 +1181,22 @@ class Popup(tk.Toplevel):
                 self.case_number_entry.insert(0, form_data["case_number"])
                 self.investigator_name_entry.insert(0, form_data["investigator_name"])
                 self.investigator_phone_entry.insert(0, form_data["investigator_phone"])
-                self.email_entry.insert(0, form_data["email_address"])
+                self.investigator_email_entry.insert(
+                    0, form_data["investigator_email_address"]
+                )
                 self.directory_entry.insert(0, form_data["directory"])
+                self.investigator_designation.insert(
+                    0, form_data["investigator_designation"]
+                )
+                self.search_warrant_reference.insert(
+                    0, form_data["search_warrant_reference"]
+                )
+                self.case_summary.insert(0, form_data["case_summary"])
+                self.evidence_name.insert(0, form_data["evidence_name"])
+                self.evidence_number.insert(0, form_data["evidence_number"])
+                self.evidence_owner.insert(0, form_data["evidence_owner"])
+                self.evidence_owner_phone.insert(0, form_data["evidence_owner_phone"])
+
         except:
             ...
 
@@ -1117,7 +1215,7 @@ class Popup(tk.Toplevel):
         case_number = self.case_number_entry.get()
         investigator_name = self.investigator_name_entry.get()
         investigator_phone = self.investigator_phone_entry.get()
-        email_address = self.email_entry.get()
+        investigator_email_address = self.investigator_email_entry.get()
         directory = self.directory_entry.get()
 
         # Store the data in a dictionary
@@ -1131,12 +1229,22 @@ class Popup(tk.Toplevel):
             "case_created_at": current_time.get_current_time(self),
             "investigator_name": investigator_name,
             "investigator_phone": investigator_phone,
-            "email_address": email_address,
+            "investigator_designation": self.investigator_designation.get(),
+            "search_warrant_reference": self.search_warrant_reference.get(),
+            "case_summary": self.case_summary.get("1.0", "end-1c"),
+            "evidence_name": self.evidence_name.get(),
+            "evidence_number": self.evidence_number.get(),
+            "evidence_owner": self.evidence_owner.get(),
+            "evidence_owner_phone": self.evidence_owner_phone.get(),
+            "investigator_email_address": investigator_email_address,
             "directory": directory,
             "host_os": f"{p_form.system} {p_form.release}",
             "host_name": p_form.node,
             "cpu": p_form.machine,
             "logon_user": getpass.getuser(),
+            "utc_time": get_utc_time(),
+            "host_timezote": get_system_timezone(),
+            "host_macs": get_all_mac_addresses(),
         }
         del p_form
 
@@ -1172,6 +1280,28 @@ class Popup(tk.Toplevel):
             messagebox.showwarning("Warning", "Please enter the investigator's name.")
             return False
 
+        if not self.case_summary.get("1.0", "end-1c"):
+            messagebox.showwarning("Warning", "Please enter the case summary.")
+            return False
+
+        if not self.evidence_name.get():
+            messagebox.showwarning("Warning", "Please enter the evidence name")
+            return False
+
+        if not self.evidence_number.get():
+            messagebox.showwarning("Warning", "Please enter the evidence number")
+            return False
+
+        if not self.evidence_owner.get():
+            messagebox.showwarning("Warning", "Please enter the name of evidence owner")
+            return False
+
+        if not self.evidence_owner_phone.get():
+            messagebox.showwarning(
+                "Warning", "Please enter phone number of evidence owner"
+            )
+            return False
+
         if not all(
             c.isalpha() or c.isspace()
             for c in self.investigator_name_entry.get().strip()
@@ -1179,6 +1309,15 @@ class Popup(tk.Toplevel):
             messagebox.showwarning(
                 "Warning",
                 "Investigator's name should contain letters and whitespaces only.",
+            )
+            return False
+
+        if not all(
+            c.isalpha() or c.isspace() for c in self.evidence_owner.get().strip()
+        ):
+            messagebox.showwarning(
+                "Warning",
+                "Evidence owner's name should contain letters and whitespaces only.",
             )
             return False
 
@@ -1192,12 +1331,22 @@ class Popup(tk.Toplevel):
             messagebox.showwarning("Warning", "Investigator's phone number is invalid.")
             return False
 
-        if not self.email_entry.get():
-            messagebox.showwarning("Warning", "Please enter an email address.")
+        if not self.check_phone_number(self.evidence_owner_phone.get().strip()):
+            messagebox.showwarning(
+                "Warning", "Evidence owner's phone number is invalid."
+            )
             return False
 
-        if not self.check_email(self.email_entry.get()):
-            messagebox.showwarning("Warning", "Please enter a valid email address.")
+        if not self.investigator_email_entry.get():
+            messagebox.showwarning(
+                "Warning", "Please enter an investigator's email address."
+            )
+            return False
+
+        if not self.check_email(self.investigator_email_entry.get()):
+            messagebox.showwarning(
+                "Warning", "Please enter a valid investigator's email address."
+            )
             return False
 
         if not self.directory_entry.get():
