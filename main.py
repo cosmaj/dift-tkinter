@@ -20,6 +20,7 @@ import getpass
 import platform
 from core.utils.dates import Utils
 from winotify import Notification, audio
+from PIL import Image
 
 # -------------------------- DEFINING GLOBAL VARIABLES -------------------------
 
@@ -677,7 +678,7 @@ class ImageCarving(tk.Frame):
             form_data["disk_image_sha1_end"] = disk_image_sha1
             # form_data["data_carving_ended_at"] = self.ge
 
-            messagebox.showinfo("Nofication", "Carving process has finished.")
+            messagebox.showinfo("Notification", "Carving process has finished.")
 
         # Remove the temp input file
         if os.path.exists(input_file):
@@ -808,20 +809,32 @@ class ImageAuthenticity(tk.Frame):
             # Check if the user selected a valid file
             if file_path.lower().endswith((".jpg", ".jpeg", ".png")):
                 # Save the image path to form_data
-                form_data["image_name"] = file_path
+                # form_data["image_name"] = file_path
 
                 #  Testing here and there
-                metadata = self.extract_metadata(form_data["image_name"])
+                metadata = self.extract_metadata(file_path)
                 print(f"Image Metadata: {metadata}")  # testing
+                form_data["image_metadata"] = metadata
 
-                file_size = os.path.getsize(file_path)
-                print(f"Old image size: {os.path.getsize(form_data['image_name'])}")
-                if file_size > 1 * 1024 * 1024:
-                    file_path = self.compress_image(file_path)
-                    form_data["image_name"] = file_path
+                # Save the image to folder
+                if not os.path.exists("input"):
+                    os.makedirs("input")
 
-                    # Check new image size
-                    print(f"New image size: {os.path.getsize(form_data['image_name'])}")
+                # Remove any previous image before saving new one
+                input_folder_path = os.path.join(
+                    os.path.dirname(os.path.abspath(__file__)), "input"
+                )
+                self.delete_directory_contents(input_folder_path)
+
+                file_name = os.path.basename(file_path)
+                output_path = os.path.join(input_folder_path, file_name)
+                form_data["image_name"] = output_path
+
+                # Open the image and save it to the output folder
+                image = Image.open(file_path)
+                image.save(output_path)
+
+                # End save image to folder
                 # Display the file path and name in green color
                 result_label.config(text=file_path, fg="green")
                 break
@@ -831,60 +844,103 @@ class ImageAuthenticity(tk.Frame):
                     "Invalid file", "Please select a .jpg or .png file."
                 )
 
-    # Compress image if it exceeds 1MB
-    def compress_image(self, file_path):
-        img = Image.open(file_path)
-        output_path = os.path.join("input_images", os.path.basename(file_path))
+    def delete_directory_contents(self, folder_path):
+        import shutil
 
-        # Ensure the output directory exists
-        if not os.path.exists("input_images"):
-            os.makedirs("input_images")
-
-        # Compress image
-        quality = 85
-        img.save(output_path, quality=quality, optimize=True)
-        while os.path.getsize(output_path) > 1 * 1024 * 1024 and quality > 10:
-            quality -= 10
-            img.save(output_path, quality=quality, optimize=True)
-
-        return output_path
+        try:
+            for item in os.listdir(folder_path):
+                item_path = os.path.join(folder_path, item)
+                if os.path.isfile(item_path):
+                    os.remove(item_path)
+                elif os.path.isdir(item_path):
+                    shutil.rmtree(item_path)
+        except OSError as e:
+            print(f"Error deleting folder contents: {e}")
 
     def extract_metadata(self, file_path):
-        # Using exifread
         import exifread
 
         with open(file_path, "rb") as f:
             tags = exifread.process_file(f)
 
-        my_data = {tag: str(value) for tag, value in tags.items()}
-        return my_data
+        formatted_exif = {
+            "Camera Make": str(tags.get("Image Make", "Unknown")),
+            "Camera Model": str(tags.get("Image Model", "Unknown")),
+            "Image Resolution": f"{tags.get('Image XResolution', 'Unknown')} x {tags.get('Image YResolution', 'Unknown')} {tags.get('Image ResolutionUnit', 'Unknown')}",
+            "Image YCbCrPositioning": str(
+                tags.get("Image YCbCrPositioning", "Unknown")
+            ),
+            "GPS Timestamp": str(tags.get("GPS GPSTimeStamp", "Unknown")),
+            "GPS Date": str(tags.get("GPS GPSDate", "Unknown")),
+            "Thumbnail Compression": str(tags.get("Thumbnail Compression", "Unknown")),
+            "Thumbnail Resolution": f"{tags.get('Thumbnail XResolution', 'Unknown')} x {tags.get('Thumbnail YResolution', 'Unknown')} {tags.get('Thumbnail ResolutionUnit', 'Unknown')}",
+            "Thumbnail JPEG Details": f"Offset: {tags.get('Thumbnail JPEGInterchangeFormat', 'Unknown')}, Length: {tags.get('Thumbnail JPEGInterchangeFormatLength', 'Unknown')}",
+            "Exposure Time": str(tags.get("EXIF ExposureTime", "Unknown")),
+            "Aperture": f"f/{tags.get('EXIF FNumber', 'Unknown')}",
+            "ISO": str(tags.get("EXIF ISOSpeedRatings", "Unknown")),
+            "EXIF Version": str(tags.get("EXIF ExifVersion", "Unknown")),
+            "Capture Date/Time": str(tags.get("EXIF DateTimeOriginal", "Unknown")),
+            "Digitized Date/Time": str(tags.get("EXIF DateTimeDigitized", "Unknown")),
+            "Components Configuration": str(
+                tags.get("EXIF ComponentsConfiguration", "Unknown")
+            ),
+            "Shutter Speed": str(tags.get("EXIF ShutterSpeedValue", "Unknown")),
+            "Aperture Value": str(tags.get("EXIF ApertureValue", "Unknown")),
+            "Flash": str(tags.get("EXIF Flash", "Unknown")),
+            "Focal Length": str(tags.get("EXIF FocalLength", "Unknown")),
+            "Maker Note": str(tags.get("EXIF MakerNote", "Unknown")),
+            "FlashPix Version": str(tags.get("EXIF FlashPixVersion", "Unknown")),
+            "Color Space": str(tags.get("EXIF ColorSpace", "Unknown")),
+            "Image Size": f"{tags.get('EXIF ExifImageWidth', 'Unknown')} x {tags.get('EXIF ExifImageLength', 'Unknown')}",
+            "Interoperability Index": str(
+                tags.get("Interoperability InteroperabilityIndex", "Unknown")
+            ),
+            "Interoperability Version": str(
+                tags.get("Interoperability InteroperabilityVersion", "Unknown")
+            ),
+            "Exposure Index": str(tags.get("EXIF ExposureIndex", "Unknown")),
+            "Gain Control": str(tags.get("EXIF GainControl", "Unknown")),
+        }
 
-        # {print(f"File path: {file_path}")
-        # from PIL import Image
-        # from PIL.ExifTags import TAGS
-
-        # # read the image data using PIL
-        # image = Image.open(file_path)
-
-        # extracting the exif metadata
-        exifdata = image.getexif()
-
-        # looping through all the tags present in exifdata
-        for tagid in exifdata:
-
-            # getting the tag name instead of tag id
-            tagname = TAGS.get(tagid, tagid)
-
-            # passing the tagid to get its respective value
-            value = exifdata.get(tagid)
-
-            # printing the final result
-            print(f"{tagname:25}: {value}")
-        #     my_data[tag:25] = value
-        # return my_data}
+        return formatted_exif
 
     def begin_image_analysis(self):
         print("Image Analysis button clicked")
+        self.generate_report()
+
+    def generate_report(self, context=None):
+        from jinja2 import Environment, FileSystemLoader
+
+        current_dir = os.path.dirname(os.path.abspath(__file__))
+
+        # Construct the absolute path to the 'templates' directory
+        templates_dir = os.path.join(current_dir, "templates")
+
+        # Set up the environment with the absolute path to your templates directory
+        env = Environment(loader=FileSystemLoader(templates_dir))
+
+        # Load your template
+        template = env.get_template("template.html")
+
+        # Define your context (values for placeholders)
+        context = {
+            "title": "My Dynamic Web Page",
+            "heading": "This is a Dynamic Heading",
+            "content": "Here is some dynamic content.",
+            "case_name": "Chicken Thief",
+            "submitted_by": "John Doe",
+            "submission_date": "12/06/2024",
+            "case_summary": "PIL or pillow is one of the most powerful image manipulating modules in Python. It is most commonly used for reducing image size, implicitly or explicitly converting image from one format to another, save images, compressing images and much more.  As technology continues to advance, efficient image compression becomes increasingly important for both beginners and experts. How will image compression techniques evolve to meet the demands of future applications",
+        }
+
+        # Render the template with the context
+        html_output = template.render(context)
+
+        # Write the output to a new HTML file
+        with open("output.html", "w", encoding="utf-8") as file:
+            file.write(html_output)
+
+        print("New HTML file has been created based on the template.")
 
 
 # ----------------------------- CUSTOM WIDGETS ---------------------------------

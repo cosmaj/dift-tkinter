@@ -1,0 +1,342 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DIFT Report</title>
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    <link href="./static_files/css/tailwind.min.css" rel="stylesheet">
+    <!-- Font Awesome CDN link -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <link rel="stylesheet" href="./static_files/fontawesome/css/fontawesome.min.css">
+    <style>
+        .dropdown-title::after {
+            content: " ▼";
+            float: right;
+        }
+        .image-rounded {
+            border-radius: 50%;
+        }
+        @media print {
+            body {
+                font-size: 12pt;
+                color: #000;
+                background-color: #fff;
+            }
+            .container {
+                page-break-after: avoid;
+            }
+            .section-title {
+                page-break-inside: avoid;
+            }
+            .section {
+                page-break-inside: avoid;
+                page-break-after: auto;
+            }
+            .image-container {
+                page-break-inside: avoid;
+            }
+            table, th, td {
+                page-break-inside: avoid;
+            }
+        }
+    </style>
+</head>
+<body class="bg-gray-100 font-sans leading-normal tracking-normal">
+    <div class="container mx-auto p-4 bg-white shadow-md rounded-lg">
+        <header class="flex items-center justify-between mb-6">
+            <div class="flex items-center">
+                <img src="./static_files/img/dift-logo.png" alt="Applocation Logo" class="w-16 h-16 rounded-full mr-4">
+            </div>
+            <div class="text-right">
+                <h1 class="text-2xl font-bold text-blue-800">Digital Image Forensics Tool Report </h1>
+            </div>
+        </header>
+        <section class="bg-blue-50 p-4 rounded-lg mb-6">
+            <div class="text-right">
+                <div class="text-xl font-semibold"> <i class="fas fa-user-secret"></i> Case Name: <span class="font-bold text-blue-800"> {{case_name}}</span></div>
+                <div class="text-xl font-semibold"> <i class="fas fa-file"></i> Case Evidence Number: <span class="font-bold text-blue-800">{{case_evidence_num}}</span> </div>
+            </div>
+        </section>
+        <section class="case-information bg-gray-50 p-4 rounded-lg mb-6">
+            <div class="section-title text-xl font-semibold border-b-2 border-yellow-500 mb-4">Case Information <i class="fas fa-info-circle"></i></div>
+            <ul class="list-unstyled">
+                <li><i class="fas fa-user"> </i> Submitted by: {{submitted_by}} </li>
+                <li> <i class="fas fa-calendar-alt"></i>Submission Date: {{submission_date}}</li>
+            </ul>
+        </section>
+        <section class="case-summary bg-gray-50 p-4 rounded-lg mb-6">
+            <div class="section-title text-xl font-semibold border-b-2 border-yellow-500 mb-4">Case Summary <i class="fas fa-file-alt"></i></div>
+            <p>{{case_summary}}</p>
+        </section>
+        <section class="evidence-information bg-gray-50 p-4 rounded-lg mb-6">
+            <div class="section-title text-xl font-semibold border-b-2 border-yellow-500 mb-4">Evidence Information <i class="fas fa-briefcase"></i></div>
+            <ul class="list-unstyled">
+                <li><i class="fas fa-tag"></i> Device Label: {{device_label}}</li>
+                <li><i class="fas fa-laptop"> </i> Name: {{device_name}}</li>
+                <li><i class="fas fa-id-card"></i> Device ID: {{device_id}}</li>
+                <li><i class="fas fa-file"></i> Device Evidence Number: {{evidence_number}}</li>
+                <li> <i class="fas fa-user"></i> Owner Name: {{evidence_owner}}</li>
+                <li> <i class="fas fa-phone"></i>Owner's Phone Number: {{evidence_owner_phone}}</li>
+            </ul>
+        </section>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+            <section class="investigator-information bg-gray-50 p-4 rounded-lg">
+                <div class="section-title text-xl font-semibold border-b-2 border-yellow-500 mb-4">Investigator Information <i class="fas fa-user-tie"></i></div>
+                <div class="flex items-center mb-4">
+                    <img src="{{investigator_logo}}" alt="Investigator Logo" class="w-24 h-24 rounded-full mr-4">
+                    <ul class="list-unstyled">
+                        <li>
+                            <i class="fas fa-user"></i>
+                            Investigator name: {{investigator_name}}
+                        </li>
+                        <li>
+                            <i class="fas fa-id-badge"></i>
+                            Investigator Designation: {{investigator_designation}}
+                        </li>
+                        <li>
+                            <i class="fas fa-envelope"></i>
+                            Investigator email: {{investigator_email}}
+                        </li>
+                        <li>
+                            <i class="fas fa-phone"></i>
+                            Investigator Phone Number: {{investigator_phone}}
+                        </li>
+                        <li>
+                            <i class="fas fa-search"></i>
+                            Search warrant[Reference #]: {{search_warant_reference}}
+                        </li>
+                    </ul>
+                </div>
+            </section>
+            <section class="extraction-information bg-gray-50 p-4 rounded-lg">
+                <div class="section-title text-xl font-semibold border-b-2 border-yellow-500 mb-4">Extraction Information <i class="fas fa-database"></i></div>
+                <ul class="list-unstyled">
+                    <li>
+                        <i class="fas fa-calendar-plus"></i>
+                        Date extraction started: {{extraction_start}}
+                    </li>
+                    <li>
+                        <i class="fas fa-calendar-minus"></i>
+                        Date extraction ended: {{extraction_end}}
+                    </li>
+                    <li>
+                        <i class="fas fa-wrench"></i>
+                        Extracted by: DIFT V01
+                    </li>
+                    <li>
+                        <i class="fas fa-file-alt"></i>
+                        Reported by: DIFT
+                    </li>
+                    <li>
+                        <i class="fas fa-shield-alt"></i>
+                        Hash value before: {{disk_image_hash}}
+                    </li>
+                    <li>
+                        <i class="fas fa-check-circle"></i>
+                        Hash value after: {{disk_image_hash_final}}
+                    </li>
+                </ul>
+            </section>
+        </div>
+        <section class="workstation-information bg-gray-50 p-4 rounded-lg mb-6">
+            <div class="section-title text-xl font-semibold border-b-2 border-yellow-500 mb-4"><i class="fas fa-desktop mr-2"></i>Workstation Information</div>
+            <ul class="list list-unstyled">
+                <li>
+                    <i class="fas fa-desktop"></i>
+                    Device Name (Host Name): {{host_name}}
+                </li>
+                <li>
+                    <i class="fab fa-windows"></i>
+                    Operating System: {{host_os}}
+                </li>
+                <li>
+                    <i class="fas fa-user"></i>
+                    User: {{host_user}}
+                </li>
+                <li>
+                    <i class="fas fa-toolbox"></i>
+                    Tool Used: DIFT
+                </li>
+                <li>
+                    <i class="fas fa-network-wired"></i>
+                    Device MAC address: {{host_mac}}
+                </li>
+                <li>
+                    <i class="fas fa-globe"></i>
+                    Timezone: {{host_timezote}}
+                </li>
+            </ul>
+        </section>
+        <section class="image-authenticity bg-gray-50 p-4 rounded-lg mb-6">
+            <div class="section-title text-xl font-semibold border-b-2 border-yellow-500 mb-4"><i class="fa fa-check-square mr-2" aria-hidden="true"></i>Image Authenticity Check
+            </div>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                    <div class="text-center font-semibold mb-2">Input Image</div>
+                    <div class="box image-container bg-white p-4 rounded-lg shadow-md">
+                        <img src="{{uploaded_image}}" alt="Uploaded Image" class="w-full h-auto mb-4">
+                        <div class="overflow-x-auto">
+                            <table class="table-auto w-full">
+                                <thead>
+                                    <tr>
+                                        <th class="px-4 py-2">Hash values for Image</th>
+        
+                                       
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr>
+                                        <td class="border px-4 py-2"><b>Hash value before</b></td>
+                                        <td class="border px-4 py-2">80%</td>
+                                    </tr>
+                                    <tr>
+                                        <td class="border px-4 py-2"><b> Value after</b></td>
+                                        <td class="border px-4 py-2">70%</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+
+                    </div>
+                </div>
+                <div>
+                    <div class="text-center font-semibold mb-2">Localization of Image</div>
+                    <div class="box image-container bg-white p-4 rounded-lg shadow-md">
+                        <img src="{{forgery_localization}}" alt="Forgery localization on Image" class="w-full h-auto mb-4">
+                        <div class="overflow-x-auto">
+                            <table class="table-auto w-full">
+                                <thead>
+                                    <tr>
+                                        <th class="px-4 py-2">Forgery Type</th>
+                                        <th class="px-4 py-2"><i class="fa fa-check" aria-hidden="true"></i>
+                                            Authenticity</th>
+                                        <th class="px-4 py-2"><i class="fa fa-times" aria-hidden="true"></i>
+                                            Forgery</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr>
+                                        <td class="border px-4 py-2">
+                                            <b>Copy-Move Forgery</b>
+                                        </td>
+                                        <td class="border px-4 py-2">{{copy_move_au_prob}}
+                                        </td>
+                                        <td class="border px-4 py-2">
+                                            {{copy_move_tp_prob}}
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td class="border px-4 py-2">
+                                            <b>Splicing Forgery</b>
+                                        </td>
+                                        <td class="border px-4 py-2">
+                                            {{splicing_au_prob}}
+                                        </td>
+                                        <td class="border px-4 py-2">
+                                            {{splicing_tp_prob}}
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+        <section class="metadata bg-gray-50 p-4 rounded-lg mb-6">
+            <div class="section-title text-xl font-semibold mb-4">Metadata <i class="fas fa-info-circle"></i></div>
+            <div class="overflow-x-auto">
+                <table class="table-auto w-full">
+                    <thead>
+                        <tr>
+                            <th class="px-4 py-2"><b></b>Field</th>
+                            <th class="px-4 py-2">Value</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td class="border px-4 py-2"><b>File Name</b></td>
+                            <td class="border px-4 py-2">example.jpg</td>
+                        </tr>
+                        <tr>
+                            <td class="border px-4 py-2"><b>File Size</b></td>
+                            <td class="border px-4 py-2">2.3 MB</td>
+                        </tr>
+                        <tr>
+                            <td class="border px-4 py-2"><b>File Type</b></td>
+                            <td class="border px-4 py-2">JPEG</td>
+                        </tr>
+                        <tr>
+                            <td class="border px-4 py-2"><b>Creation Date</b></td>
+                            <td class="border px-4 py-2">2024-06-16</td>
+                        </tr>
+                        <tr>
+                            <td class="border px-4 py-2"><b> Date<b></b></td>
+                            <td class="border px-4 py-2">2024-06-16</td>
+                        </tr>
+                        <tr>
+                            <td class="border px-4 py-2"><b> Model</b></td>
+                            <td class="border px-4 py-2">Canon EOS 5D Mark IV</td>
+                        </tr>
+                        <tr>
+                            <td class="border px-4 py-2"><b>Resolution</b></td>
+                            <td class="border px-4 py-2">6720 x 4480</td>
+                        </tr>
+                        <tr>
+                            <td class="border px-4 py-2"><b>Color Space</b></td>
+                            <td class="border px-4 py-2">sRGB</td>
+                        </tr>
+                        <tr>
+                            <td class="border px-4 py-2"><b> Latitude</b></td>
+                            <td class="border px-4 py-2">37.7749° N</td>
+                        </tr>
+                        <tr>
+                            <td class="border px-4 py-2"><b>GPS Longitude</b></td>
+                            <td class="border px-4 py-2">122.4194° W</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </section>
+        <section class="recovered-images bg-gray-50 p-4 rounded-lg mb-6">
+            <div class="section-title text-xl font-semibold border-b-2 border-yellow-500 mb-4 dropdown-title cursor-pointer" onclick="toggleDropdown()">Recovered Images  <i class="fa fa-recycle" aria-hidden="true"></i>
+            </div>
+            <div class="dropdown-content hidden" id="recoveredImagesContent">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div class="box image-container bg-white p-4 rounded-lg shadow-md">
+                        <img src="D:\diftModels\s.jpg" alt="Recovered Image" class="w-full h-auto mb-4">
+                        <ul class="list-unstyled">
+                            <li><b>File Name:</b></li>
+                            <li><b>File Name:</b></li>
+                            <li><b>File Name:</b></li>
+                            <li><b>File Name:</b></li>
+                            
+                        </ul>
+                    </div>
+                    <div class="box image-container bg-white p-4 rounded-lg shadow-md">
+                        <img src="D:\diftModels\s.jpg" alt="Recovered Image" class="w-full h-auto mb-4">
+                        <ul class="list-unstyled">
+                            <li><b>File Name:</b></li>
+                            <li><b>File Name:</b></li>
+                            <li><b>File Name:</b></li>
+                            <li><b>File Name:</b></li>
+
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </div>
+    <script>
+        function toggleDropdown() {
+            var content = document.getElementById("recoveredImagesContent");
+            if (content.classList.contains("hidden")) {
+                content.classList.remove("hidden");
+            } else {
+                content.classList.add("hidden");
+            }
+        }
+    </script>
+</body>
+</html>
