@@ -859,55 +859,95 @@ class ImageAuthenticity(tk.Frame):
         except OSError as e:
             print(f"Error deleting folder contents: {e}")
 
+    # def extract_metadata(self, file_path):
+    #     import exifread
+
+    #     with open(file_path, "rb") as f:
+    #         tags = exifread.process_file(f)
+
+    #     image_size = os.path.getsize(file_path) / (1024 * 1024)
+    #     formatted_exif = {
+    #         "File Name": os.path.basename(file_path),
+    #         "File Size": f"{image_size:.2f} MB",
+    #         "Camera Make": str(tags.get("Image Make", "Unknown")),
+    #         "Camera Model": str(tags.get("Image Model", "Unknown")),
+    #         "Image Resolution": f"{tags.get('Image XResolution', 'Unknown')} x {tags.get('Image YResolution', 'Unknown')} {tags.get('Image ResolutionUnit', 'Unknown')}",
+    #         "Image YCbCrPositioning": str(
+    #             tags.get("Image YCbCrPositioning", "Unknown")
+    #         ),
+    #         "GPS Timestamp": str(tags.get("GPS GPSTimeStamp", "Unknown")),
+    #         "GPS Date": str(tags.get("GPS GPSDate", "Unknown")),
+    #         "Thumbnail Compression": str(tags.get("Thumbnail Compression", "Unknown")),
+    #         "Thumbnail Resolution": f"{tags.get('Thumbnail XResolution', 'Unknown')} x {tags.get('Thumbnail YResolution', 'Unknown')} {tags.get('Thumbnail ResolutionUnit', 'Unknown')}",
+    #         "Thumbnail JPEG Details": f"Offset: {tags.get('Thumbnail JPEGInterchangeFormat', 'Unknown')}, Length: {tags.get('Thumbnail JPEGInterchangeFormatLength', 'Unknown')}",
+    #         "Exposure Time": str(tags.get("EXIF ExposureTime", "Unknown")),
+    #         "Aperture": f"f/{tags.get('EXIF FNumber', 'Unknown')}",
+    #         "ISO": str(tags.get("EXIF ISOSpeedRatings", "Unknown")),
+    #         "EXIF Version": str(tags.get("EXIF ExifVersion", "Unknown")),
+    #         "Capture Date/Time": str(tags.get("EXIF DateTimeOriginal", "Unknown")),
+    #         "Digitized Date/Time": str(tags.get("EXIF DateTimeDigitized", "Unknown")),
+    #         "Components Configuration": str(
+    #             tags.get("EXIF ComponentsConfiguration", "Unknown")
+    #         ),
+    #         "Shutter Speed": str(tags.get("EXIF ShutterSpeedValue", "Unknown")),
+    #         "Aperture Value": str(tags.get("EXIF ApertureValue", "Unknown")),
+    #         "Flash": str(tags.get("EXIF Flash", "Unknown")),
+    #         "Focal Length": str(tags.get("EXIF FocalLength", "Unknown")),
+    #         "Maker Note": str(tags.get("EXIF MakerNote", "Unknown")),
+    #         "FlashPix Version": str(tags.get("EXIF FlashPixVersion", "Unknown")),
+    #         "Color Space": str(tags.get("EXIF ColorSpace", "Unknown")),
+    #         "Image Size": f"{tags.get('EXIF ExifImageWidth', 'Unknown')} x {tags.get('EXIF ExifImageLength', 'Unknown')}",
+    #         "Interoperability Index": str(
+    #             tags.get("Interoperability InteroperabilityIndex", "Unknown")
+    #         ),
+    #         "Interoperability Version": str(
+    #             tags.get("Interoperability InteroperabilityVersion", "Unknown")
+    #         ),
+    #         "Exposure Index": str(tags.get("EXIF ExposureIndex", "Unknown")),
+    #         "Gain Control": str(tags.get("EXIF GainControl", "Unknown")),
+    #     }
+
+    #     return formatted_exif
+
     def extract_metadata(self, file_path):
-        import exifread
+        current_directory = os.path.dirname(os.path.realpath(__file__))
+        # command = [
+        #     os.path.join(current_directory, "core", "exiftool", "exiftool.exe"),
+        #     file_path,
+        #     "-j",
+        #     ">",
+        #     "image_metadata.json",
+        # ]
 
-        with open(file_path, "rb") as f:
-            tags = exifread.process_file(f)
+        command = [
+            os.path.join(current_directory, "core", "exiftool", "exiftool.exe"),
+            file_path,
+            "-j",
+        ]
+        
+        json_file = "image_metadata.json"
+        # Execute the command and redirect the output to a file
+        with open(json_file, "w") as outfile:
+            subprocess.run(command, stdout=outfile, universal_newlines=True)
 
-        image_size = os.path.getsize(file_path) / (1024 * 1024)
-        formatted_exif = {
-            "File Name": os.path.basename(file_path),
-            "File Size": f"{image_size:.2f} MB",
-            "Camera Make": str(tags.get("Image Make", "Unknown")),
-            "Camera Model": str(tags.get("Image Model", "Unknown")),
-            "Image Resolution": f"{tags.get('Image XResolution', 'Unknown')} x {tags.get('Image YResolution', 'Unknown')} {tags.get('Image ResolutionUnit', 'Unknown')}",
-            "Image YCbCrPositioning": str(
-                tags.get("Image YCbCrPositioning", "Unknown")
-            ),
-            "GPS Timestamp": str(tags.get("GPS GPSTimeStamp", "Unknown")),
-            "GPS Date": str(tags.get("GPS GPSDate", "Unknown")),
-            "Thumbnail Compression": str(tags.get("Thumbnail Compression", "Unknown")),
-            "Thumbnail Resolution": f"{tags.get('Thumbnail XResolution', 'Unknown')} x {tags.get('Thumbnail YResolution', 'Unknown')} {tags.get('Thumbnail ResolutionUnit', 'Unknown')}",
-            "Thumbnail JPEG Details": f"Offset: {tags.get('Thumbnail JPEGInterchangeFormat', 'Unknown')}, Length: {tags.get('Thumbnail JPEGInterchangeFormatLength', 'Unknown')}",
-            "Exposure Time": str(tags.get("EXIF ExposureTime", "Unknown")),
-            "Aperture": f"f/{tags.get('EXIF FNumber', 'Unknown')}",
-            "ISO": str(tags.get("EXIF ISOSpeedRatings", "Unknown")),
-            "EXIF Version": str(tags.get("EXIF ExifVersion", "Unknown")),
-            "Capture Date/Time": str(tags.get("EXIF DateTimeOriginal", "Unknown")),
-            "Digitized Date/Time": str(tags.get("EXIF DateTimeDigitized", "Unknown")),
-            "Components Configuration": str(
-                tags.get("EXIF ComponentsConfiguration", "Unknown")
-            ),
-            "Shutter Speed": str(tags.get("EXIF ShutterSpeedValue", "Unknown")),
-            "Aperture Value": str(tags.get("EXIF ApertureValue", "Unknown")),
-            "Flash": str(tags.get("EXIF Flash", "Unknown")),
-            "Focal Length": str(tags.get("EXIF FocalLength", "Unknown")),
-            "Maker Note": str(tags.get("EXIF MakerNote", "Unknown")),
-            "FlashPix Version": str(tags.get("EXIF FlashPixVersion", "Unknown")),
-            "Color Space": str(tags.get("EXIF ColorSpace", "Unknown")),
-            "Image Size": f"{tags.get('EXIF ExifImageWidth', 'Unknown')} x {tags.get('EXIF ExifImageLength', 'Unknown')}",
-            "Interoperability Index": str(
-                tags.get("Interoperability InteroperabilityIndex", "Unknown")
-            ),
-            "Interoperability Version": str(
-                tags.get("Interoperability InteroperabilityVersion", "Unknown")
-            ),
-            "Exposure Index": str(tags.get("EXIF ExposureIndex", "Unknown")),
-            "Gain Control": str(tags.get("EXIF GainControl", "Unknown")),
-        }
+        # Extract metadata
+        import json
 
-        return formatted_exif
+        # Open and read the JSON file
+        with open(json_file, "r") as file:
+            data = json.load(file)
+
+        # Initialize the dictionary and append the data
+        form_data = dict()
+        form_data = data[0]
+        
+        try:
+            if os.path.exists(json_file):
+                os.remove(json_file)
+        except Exception as e:
+            print(f"file does not exist")
+            
+        return form_data
 
     def begin_image_analysis(self):
         print("Image Analysis button clicked")
