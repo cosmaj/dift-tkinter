@@ -268,42 +268,52 @@
                 </div>
             </div>
         </section>
-        <section class="recovered-images bg-gray-50 p-4 rounded-lg mb-6">
-            <div class="section-title text-xl font-semibold border-b-2 border-yellow-500 mb-4 dropdown-title cursor-pointer" onclick="toggleDropdown()">
-                Uploaded Image Metadata<i class="fas fa-info-circle ml-2" aria-hidden="true"></i>
-            </div>
-            <div class="dropdown-content hidden" id="recoveredImagesContent">
-                <!-- Metadata goes here-->
-                <div class="overflow-x-auto">
-                    <table class="table-auto w-full">
-                        <thead>
+        <section class="metadata bg-gray-50 p-4 rounded-lg mb-6">
+            <div class="section-title text-xl font-semibold mb-4">Metadata <i class="fas fa-info-circle"></i></div>
+            <div class="overflow-x-auto">
+                <table class="table-auto w-full">
+                    <thead>
+                        <tr>
+                            <th class="px-4 py-2"></th>
+                            <th class="px-4 py-2"></th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for key, value in image_metadata.items() %}
                             <tr>
-                                <th class="px-4 py-2"></th>
-                                <th class="px-4 py-2"></th>
+                                <td class="border px-4 py-2"><b>{{key}}</b></td>
+                                <td class="border px-4 py-2">{{value}}</td>
                             </tr>
-                        </thead>
-                        <tbody>
-                            {% for key, value in image_metadata.items() %}
-                                <tr>
-                                    <td class="border px-4 py-2"><b>{{key}}</b></td>
-                                    <td class="border px-4 py-2">{{value}}</td>
-                                </tr>
-                            {% endfor %}
-                        </tbody>
-                    </table>
-                </div>
+                        {% endfor %}
+                    </tbody>
+                </table>
             </div>
         </section>
-        <section class="metadata bg-gray-50 p-4 rounded-lg mb-6">
-            <div class="section-title text-xl font-semibold border-b-2 border-yellow-500 mb-4">Recovered Images<i class="fa fa-recycle ml-2" aria-hidden="true"></i>
+        <section class="recovered-images bg-gray-50 p-4 rounded-lg mb-6">
+            <div class="section-title text-xl font-semibold border-b-2 border-yellow-500 mb-4 dropdown-title cursor-pointer" onclick="toggleDropdown()">Recovered Images  <i class="fa fa-recycle" aria-hidden="true"></i>
             </div>
-            <!-- Recovered images goes here-->
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div class="box image-container bg-white p-4 rounded-lg shadow-md">
-                    <i class="fa-solid fa-image mr-2"></i>PNG Images: {{png_count}}
-                </div>
-                <div class="box image-container bg-white p-4 rounded-lg shadow-md">
-                    <i class="fa-solid fa-image mr-2"></i>JPG Images: {{jpg_count}}
+            <div class="dropdown-content hidden" id="recoveredImagesContent">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div class="box image-container bg-white p-4 rounded-lg shadow-md">
+                        <img src="D:\diftModels\s.jpg" alt="Recovered Image" class="w-full h-auto mb-4">
+                        <ul class="list-unstyled">
+                            <li><b>File Name:</b></li>
+                            <li><b>File Name:</b></li>
+                            <li><b>File Name:</b></li>
+                            <li><b>File Name:</b></li>
+                            
+                        </ul>
+                    </div>
+                    <div class="box image-container bg-white p-4 rounded-lg shadow-md">
+                        <img src="D:\diftModels\s.jpg" alt="Recovered Image" class="w-full h-auto mb-4">
+                        <ul class="list-unstyled">
+                            <li><b>File Name:</b></li>
+                            <li><b>File Name:</b></li>
+                            <li><b>File Name:</b></li>
+                            <li><b>File Name:</b></li>
+
+                        </ul>
+                    </div>
                 </div>
             </div>
         </section>
