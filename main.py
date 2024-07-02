@@ -22,7 +22,6 @@ import platform
 import shutil
 from core.utils.dates import Utils
 from winotify import Notification, audio
-from PIL import Image
 from core.utils.reports import generate_report
 from core.utils.file_digest import calculate_hashes
 from core.utils.system_info import (
@@ -682,7 +681,7 @@ class ImageCarving(tk.Frame):
                 form_data["exclude_image_authenticity"] = True
                 print("User wanna end here, Generate report!")
                 current_dir = os.path.dirname(os.path.abspath(__file__))
-                generate_report(self, current_dir=current_dir, context=form_data)
+                generate_report(current_dir, form_data)
 
         # Remove the temp input file
         if os.path.exists(input_file):
@@ -728,8 +727,11 @@ class ImageAuthenticity(tk.Frame):
         label_frame.pack(side=tk.LEFT, expand=True, fill=tk.X)
 
         # Create and pack the label into the label_frame
+        custom_font = font.Font(family="Helvetica", size=11)
         label = tk.Label(
-            label_frame, text="Upload image with .jpg or .png file extension"
+            label_frame,
+            text="Upload image with .jpg or .png file extension",
+            font=custom_font,
         )
         label.pack(side=tk.LEFT, padx=5)
 
@@ -747,33 +749,33 @@ class ImageAuthenticity(tk.Frame):
         image_analysis_frame.pack(pady=3, padx=2, fill="x")
 
         # Create a progress bar
-        global image_analysis_progress_var
-        image_analysis_progress_var = tk.DoubleVar(value=0)
-        progress_bar = ttk.Progressbar(
-            image_analysis_frame,
-            length=200,
-            mode="determinate",
-            orient="horizontal",
-            variable=image_analysis_progress_var,
-        )
-        progress_bar.pack(pady=10, padx=10, fill="x")
+        # global image_analysis_progress_var
+        # image_analysis_progress_var = tk.DoubleVar(value=0)
+        # progress_bar = ttk.Progressbar(
+        #     image_analysis_frame,
+        #     length=200,
+        #     mode="determinate",
+        #     orient="horizontal",
+        #     variable=image_analysis_progress_var,
+        # )
+        # progress_bar.pack(pady=10, padx=10, fill="x")
 
         # Forgery Localization Progress Frame
-        localization_frame = tk.LabelFrame(self, text="Forgery localization")
-        localization_frame.pack(pady=5, padx=2, fill="x")
+        # localization_frame = tk.LabelFrame(self, text="Forgery localization")
+        # localization_frame.pack(pady=5, padx=2, fill="x")
 
-        # Create a progress bar
-        global localization_progress_var
-        localization_progress_var = tk.DoubleVar(value=0)
-        global localization_progress_bar
-        localization_progress_bar = ttk.Progressbar(
-            localization_frame,
-            length=200,
-            mode="determinate",
-            orient="horizontal",
-            variable=localization_progress_var,
-        )
-        localization_progress_bar.pack(pady=10, padx=10, fill="x")
+        # # Create a progress bar
+        # global localization_progress_var
+        # localization_progress_var = tk.DoubleVar(value=0)
+        # global localization_progress_bar
+        # localization_progress_bar = ttk.Progressbar(
+        #     localization_frame,
+        #     length=200,
+        #     mode="determinate",
+        #     orient="horizontal",
+        #     variable=localization_progress_var,
+        # )
+        # localization_progress_bar.pack(pady=10, padx=10, fill="x")
 
         # Start Carving button
         # Create Save and Cancel buttons
@@ -839,7 +841,12 @@ class ImageAuthenticity(tk.Frame):
                 form_data["image_md5_start"] = image_md5_start
                 form_data["image_sha1_start"] = image_sha1_start
                 # Display the file path and name in green color
-                result_label.config(text=file_path, fg="green")
+                custom_font = font.Font(family="Helvetica", size=11)
+                result_label.config(
+                    text=f"{file_path} Loaded successfully",
+                    fg="green",
+                    font=custom_font,
+                )
                 break
             else:
                 # Show a warning dialog and prompt the user again
@@ -924,7 +931,7 @@ class ImageAuthenticity(tk.Frame):
             file_path,
             "-j",
         ]
-        
+
         json_file = "image_metadata.json"
         # Execute the command and redirect the output to a file
         with open(json_file, "w") as outfile:
@@ -940,17 +947,29 @@ class ImageAuthenticity(tk.Frame):
         # Initialize the dictionary and append the data
         form_data = dict()
         form_data = data[0]
-        
+
         try:
             if os.path.exists(json_file):
                 os.remove(json_file)
         except Exception as e:
             print(f"file does not exist")
-            
+
         return form_data
 
     def begin_image_analysis(self):
-        print("Image Analysis button clicked")
+        # print("Image Analysis button clicked")
+
+        toast = Notification(
+            app_id="DIFT",
+            title="Notification",
+            msg=f"Image analysis is in progress please wait",
+            icon=os.path.join(
+                os.path.dirname(os.path.realpath(__file__)), "images", "dift-logo.png"
+            ),
+            duration="short",
+        )
+        toast.set_audio(audio.SMS, loop=False)
+        toast.show()
 
         # Validate the form fields
         if not self.validate_before_analysis():
