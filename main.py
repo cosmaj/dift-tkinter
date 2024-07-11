@@ -945,8 +945,8 @@ class ImageAuthenticity(tk.Frame):
             data = json.load(file)
 
         # Initialize the dictionary and append the data
-        form_data = dict()
-        form_data = data[0]
+        meta_data_dict = dict()
+        meta_data_dict = data[0]
 
         try:
             if os.path.exists(json_file):
@@ -954,7 +954,7 @@ class ImageAuthenticity(tk.Frame):
         except Exception as e:
             print(f"file does not exist")
 
-        return form_data
+        return meta_data_dict
 
     def begin_image_analysis(self):
         # print("Image Analysis button clicked")
@@ -980,6 +980,8 @@ class ImageAuthenticity(tk.Frame):
         # 1. Copy-move forgery
         # 2. Splicing forgery
         # 3. Forgery localization
+        self.localize_forgery(image_name, os.path.dirname(os.path.abspath(__file__)))
+
 
         # Calculate final hash
         image_md5_end, image_sha1_end = calculate_hashes(file_name=image_name)
@@ -991,6 +993,7 @@ class ImageAuthenticity(tk.Frame):
         current_dir = os.path.dirname(os.path.abspath(__file__))
         try:
             generate_report(current_dir, form_data)
+            # self.localize_forgery(image_name, os.path.dirname(os.path.abspath(__file__)))
             # Display message
             messagebox.showinfo(
                 title="Task Completed", message="Analysis completed successfully"
@@ -999,6 +1002,64 @@ class ImageAuthenticity(tk.Frame):
             print(f"Error occurred: {e}")
             messagebox.showerror(title="Error", message=f"Report generation failed")
 
+    # localization
+    def localize_forgery(self, file_path, current_dir):
+        import requests
+        from zipfile import ZipFile
+        from io import BytesIO
+        from pathlib import Path
+        print("Analysing the image, please wait...")
+
+        # The URL of your FastAPI server endpoint that will process and return the file
+        server_url = "http://172.31.21.200:8000"
+
+        # Send the file in a POST request and get back a JSON response with a download link
+        response = requests.post(f"{server_url}/process", files={"file": open(file_path, "rb")})
+
+        if response.status_code == 200:
+            # Parse the JSON response to get the file name
+            result = response.json()
+            file_name = result.get("file_name")
+
+            old_name = file_name.split(".")[0]
+            file_name = f"{old_name}.png"
+
+            # Define the download link
+            download_link = f"{server_url}/download/{file_name}"
+
+            # Make a GET request to download the file
+            downloaded_file_response = requests.get(download_link)
+
+            if downloaded_file_response.status_code == 200:
+                print("File downloaded successfully.")
+
+                # Create 'output_pred' directory if it doesn't exist
+                Path('output_pred').mkdir(parents=True, exist_ok=True)
+
+                # Clear the folder
+                for f in Path('output_pred').glob('*'):
+                    f.unlink()
+
+                # Use BytesIO to treat bytes as a file-like object for ZipFile to extract
+                zip_file = ZipFile(BytesIO(downloaded_file_response.content))
+
+                # Extract all contents of the zip file into the 'output_pred' directory
+                zip_file.extractall('output_pred')
+
+                # Generate the report
+                # context = {
+                #     "image_name": file_path,
+                #     "directory": current_dir
+                # }
+                # form_data["image_name"] = file_path
+                # form_data["directory"] = current_dir
+                # generate_report(current_dir, context)
+
+            else:
+                print(f"Failed to download file: {downloaded_file_response.status_code}")
+        else:
+            print(f"Failed to send file or process response: {response.status_code}")
+            print(response.text)
     def validate_before_analysis(self):
         # Check if Case was created
         try:
